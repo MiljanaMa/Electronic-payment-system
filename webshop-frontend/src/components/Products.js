@@ -15,6 +15,7 @@ export default function Products() {
     const[products, setProducts] = useState(null)
 
     useEffect(() => {
+      //change this when you add jwt
         axiosInstance.get('http://localhost:8081/api/products').then(response => {
           setProducts(response.data);
         })
