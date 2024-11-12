@@ -50,6 +50,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginRequestDTO loginRequest, HttpSession session) {
+        System.out.println("Sifra:" + loginRequest.getPassword());
         try{
             boolean isAuthenticated = userService.authenticate(loginRequest.getUsername(),loginRequest.getPassword());
 
