@@ -38,11 +38,10 @@ export default function Products() {
 
 
         const handleDetailsClick = (bundleId) => {
-          // Fetch products for the selected bundle
           axiosInstance.get(`bundles/bundle-products/${bundleId}`)
             .then(response => {
               setBundleProducts(response.data);
-              setOpenDialog(true); // Open dialog
+              setOpenDialog(true);
             })
             .catch(error => {
               console.error("There was an error fetching the bundle products!", error);
@@ -92,7 +91,7 @@ export default function Products() {
           </Table>
         </TableContainer>
         
-        <Box margin="10px" justifyContent="center" alignItems="center" >Budles</Box>
+        <Box margin="10px" justifyContent="center" alignItems="center" >Bundles</Box>
         <TableContainer component={Paper} style={{ width: '70%' }}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
