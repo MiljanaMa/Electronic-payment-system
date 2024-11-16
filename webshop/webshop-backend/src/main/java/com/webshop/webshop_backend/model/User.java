@@ -31,11 +31,11 @@ public class User implements UserDetails {
     @NonNull
     private String username;
 
-    @Column(name = "firstName")
+    @Column(name = "first_name")
     @NonNull
     private String firstName;
 
-    @Column(name = "lastName")
+    @Column(name = "last_name")
     @NonNull
     private String lastName;
 

@@ -1,5 +1,6 @@
 package com.webshop.webshop_backend.controller;
 
+import com.webshop.webshop_backend.dto.ProductDto;
 import com.webshop.webshop_backend.model.Product;
 import com.webshop.webshop_backend.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +16,12 @@ public class ProductController {
         this.productService = productService;
     }
     @GetMapping("")
-    public List<Product> getProducts() {
+    public List<ProductDto> getProducts() {
         return productService.getProducts();
     }
+
     @GetMapping("/{id}")
-    public Product getProduct(@PathVariable("id") String id) {
+    public ProductDto getProduct(@PathVariable("id") String id) {
         return productService.getProduct(id);
     }
 }
