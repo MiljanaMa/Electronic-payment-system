@@ -4,6 +4,7 @@ import com.webshop.webshop_backend.dto.ProductDto;
 import com.webshop.webshop_backend.model.Product;
 import com.webshop.webshop_backend.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -15,6 +16,8 @@ public class ProductController {
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
+
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("")
     public List<ProductDto> getProducts() {
         return productService.getProducts();

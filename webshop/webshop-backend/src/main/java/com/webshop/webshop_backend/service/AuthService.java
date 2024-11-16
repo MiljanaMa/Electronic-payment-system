@@ -73,8 +73,8 @@ public class AuthService {
                                     userLogin.password()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            User userDetails = (User) authentication.getPrincipal();
-            log.info("USER AUTH: ", userDetails.getAuthorities());
+            User user = (User) authentication.getPrincipal();
+            log.info("User role: {}", user.getRole().getName());
             log.info("Token requested for user :{}", authentication.getAuthorities());
             String token = generateToken(authentication);
 
