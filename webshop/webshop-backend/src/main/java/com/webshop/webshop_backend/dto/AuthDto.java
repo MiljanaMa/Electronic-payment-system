@@ -3,7 +3,7 @@
 
 package com.webshop.webshop_backend.dto;
 
-public class AuthDTO {
+public class AuthDto {
     public record LoginRequest(String username, String password) {
     }
 

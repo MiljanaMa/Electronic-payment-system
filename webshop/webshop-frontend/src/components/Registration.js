@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Typography, Button, Box, Container, Grid, TextField} from '@mui/material';
-import axios from 'axios';
+import axiosInstance from '../config/AxiosConfig';
 
 export default function Registration() {
 
     const [formData, setFormData] = useState({
-        firstname: '',
-        lastname: '',
+        firstName: '',
+        lastName: '',
         username: '',
         password: '',
         confirmPassword: ''
@@ -33,7 +33,7 @@ export default function Registration() {
         setError('')
 
         try{
-            const response = await axios.post('http://localhost:8081/api/users/register', formData);
+            const response = await await axiosInstance.post('auth/register', formData);
 
             if(response.status === 201) {
                 navigate('/registrationSuccessful')
@@ -58,9 +58,9 @@ export default function Registration() {
             <Grid item xs={12}>
               <TextField
                 label="First Name"
-                name="firstname"
+                name="firstName"  // Match with formData's key
                 fullWidth
-                value={formData.firstname}
+                value={formData.firstName}
                 onChange={handleChange}
                 required
               />
@@ -68,13 +68,14 @@ export default function Registration() {
             <Grid item xs={12}>
               <TextField
                 label="Last Name"
-                name="lastname"
+                name="lastName"  // Match with formData's key
                 fullWidth
-                value={formData.lastname}
+                value={formData.lastName}
                 onChange={handleChange}
                 required
               />
             </Grid>
+
             <Grid item xs={12}>
               <TextField
                 label="Username"

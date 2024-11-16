@@ -3,6 +3,7 @@
 
 package com.webshop.webshop_backend.auth;
 
+import com.webshop.webshop_backend.model.User;
 import com.webshop.webshop_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,9 +20,8 @@ public class JpaUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        AuthUser user = userRepository
+        User user = userRepository
                 .findByUsername(username)
-                .map(AuthUser::new)
                 .orElseThrow(() -> new UsernameNotFoundException("User name not found: " + username));
 
         return user;

@@ -8,7 +8,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import {Paper, Box, IconButton} from '@mui/material';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import axiosInstance from '../axiosConfig';
+import axiosInstance from '../config/AxiosConfig';
 
 export default function Products() {
   
@@ -16,7 +16,7 @@ export default function Products() {
 
     useEffect(() => {
       //change this when you add jwt
-        axiosInstance.get('http://localhost:8081/api/products').then(response => {
+        axiosInstance.get('products').then(response => {
           setProducts(response.data);
         })
         .catch(error => {
@@ -50,8 +50,8 @@ export default function Products() {
                   key={product.id}
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                 >
-                  <TableCell>{product.id}</TableCell>
                   <TableCell>{product.name}</TableCell>
+                  <TableCell>{product.description}</TableCell>
                   <TableCell>{product.price}</TableCell>
                   <TableCell align='center'>
                       <IconButton color='primary'>
