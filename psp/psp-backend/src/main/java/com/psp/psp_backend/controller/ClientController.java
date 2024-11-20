@@ -29,11 +29,5 @@ public class ClientController {
             return (ResponseEntity<ClientDto>) ResponseEntity.notFound();
         }
     }
-/*
-    @GetMapping("/payment/not/subscribed")
-    public ResponseEntity<List<PaymentMethodInfoDto>> getNotSubscribedPayments(
-            @RequestParam String businessEmail, HttpServletResponse response){
-        return ResponseEntity.ok(clientService.getNotSubscribedPayments(businessEmail));
-    }*/
 
 }
