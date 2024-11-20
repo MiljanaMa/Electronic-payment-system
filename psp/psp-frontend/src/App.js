@@ -7,6 +7,7 @@ import Home from './components/Home';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './utils/ProtectedRoute';
 import Profile from './components/Profile';
+import PaymentSubscription from './components/PaymentSubscription';
 
 function App() {
 
@@ -22,8 +23,8 @@ function App() {
           <Routes>
             <Route path='' element={<Home></Home>} />
             <Route path='/login' element={<Login></Login>} />
-
-            <Route path='/profile' element={<ProtectedRoute><Profile></Profile></ProtectedRoute>} /> 
+            <Route path='/profile' element={<ProtectedRoute><Profile></Profile></ProtectedRoute>} />
+            <Route path="/paymentSubscription" element={<PaymentSubscription />} />
           </Routes>
         </BrowserRouter>    
         </AuthProvider>   

@@ -1,8 +1,5 @@
 package com.psp.psp_backend.controller;
-
-import com.psp.psp_backend.dto.ClientDto;
 import com.psp.psp_backend.dto.PaymentMethodInfoDto;
-import com.psp.psp_backend.service.ClientService;
 import com.psp.psp_backend.service.PaymentMethodService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

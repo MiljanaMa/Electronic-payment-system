@@ -6,12 +6,14 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import {Paper, Box} from '@mui/material';
+import {Paper, Box, Button} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../config/AxiosConfig';
 
 export default function Profile() {
   
     const[profile, setProfile] = useState(null)
+    const navigate = useNavigate();
 
     useEffect(() => {
         axiosInstance.get('client').then(response => {
@@ -61,6 +63,15 @@ export default function Profile() {
       </TableBody>
     </Table>
   </TableContainer>
+  <Box marginTop="20px">
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate('/paymentSubscription')}
+        >
+          Update Subscription Plan
+        </Button>
+      </Box>
 </Box>
 
   )
