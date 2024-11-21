@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import axiosInstance from '../config/AxiosConfig';
 import {Box, Button} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+
+
 
 
 export default function PaymentSubscription() {
   const [availablePaymentMethods, setAvailablePaymentMethods] = useState([]);
   const [selectedPaymentMethods, setSelectedPaymentMethods] = useState([]);
   const [client, setClient] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axiosInstance.get('paymentMethod')
       .then(response => {
-        setAvailablePaymentMethods(response.data);
+        const sortedPaymentMethods = response.data.sort((a, b) => {
+          return a.name.localeCompare(b.name);
+        });
+        setAvailablePaymentMethods(sortedPaymentMethods);
       })
       .catch(error => {
         console.error('Error fetching available payment methods', error);
@@ -40,12 +46,10 @@ export default function PaymentSubscription() {
   };
 
   const handleSubmit = () => {
-    // Send updated payment methods to the backend
-    axios.put(`/api/client/update-payment-methods`, selectedPaymentMethods)
+    axiosInstance.post('client/updatePaymentMethods', selectedPaymentMethods)
       .then(response => {
         alert('Payment methods updated successfully');
-        // Optionally refresh the client data after updating
-        setClient(response.data);
+        navigate('/profile');
       })
       .catch(error => {
         console.error('Error updating payment methods', error);
