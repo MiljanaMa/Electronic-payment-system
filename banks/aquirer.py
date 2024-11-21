@@ -1,8 +1,10 @@
+import uuid
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import requests
-import datetime
+from datetime import datetime, timezone
+
 
 # Inicijalizacija aplikacije i baze podataka
 app = Flask(__name__)
@@ -158,8 +160,32 @@ def process_payment(payment_id):
 
     creditCard1 = Card.query.filter_by(card_number=data["PAN"]).first()
     if not creditCard1:
-        return jsonify({"error": "Card not found"}), 404
+        acquirer_order_id = str(uuid.uuid4())
+        acquirer_timestamp = datetime.now(timezone.utc).isoformat()
 
+        # Podaci za slanje ka PCC
+        pcc_request = {
+            "ACQUIRER_ORDER_ID": acquirer_order_id,
+            "ACQUIRER_TIMESTAMP": acquirer_timestamp,
+            "PAN": data["PAN"],
+            "SECURITY_CODE": data["SECURITY_CODE"],
+            "CARD_HOLDER_NAME": data["CARD_HOLDER_NAME"],
+            "CARD_EXPIRY_DATE": data["CARD_EXPIRY_DATE"],
+            "AMOUNT": payment.amount,
+            "MERCHANT_ID": merchant.merchant_id,
+            "MERCHANT_ACCOUNT_NUMBER": merchant.bank_account_number,
+        }
+
+        try:
+            # Slanje POST zahteva ka PCC
+            pcc_response = requests.post("http://localhost:5002/process_payment", json=pcc_request)
+            
+            if pcc_response.status_code == 200:
+                return jsonify({"message": "Payment processed via PCC.", "response": pcc_response.json()}), 200
+            else:
+                return jsonify({"error": "PCC processing failed.", "details": pcc_response.json()}), pcc_response.status_code
+        except requests.exceptions.RequestException as e:
+            return jsonify({"error": "Failed to communicate with PCC.", "details": str(e)}), 500
     # Provera da li se podaci sa kartice poklapaju
     if creditCard1.cvv != data["SECURITY_CODE"]:
         return jsonify({"error": "Invalid security code"}), 400
@@ -211,8 +237,32 @@ def process_payment(payment_id):
         return jsonify({"message": "Payment approved and processed."}), 200
     else:
         # Različite banke
-        return jsonify({"message": "Different banks, redirecting to PCC for further processing."}), 200
+        acquirer_order_id = str(uuid.uuid4())
+        acquirer_timestamp = datetime.now(timezone.utc).isoformat()
 
+        # Podaci za slanje ka PCC
+        pcc_request = {
+            "ACQUIRER_ORDER_ID": acquirer_order_id,
+            "ACQUIRER_TIMESTAMP": acquirer_timestamp,
+            "PAN": data["PAN"],
+            "SECURITY_CODE": data["SECURITY_CODE"],
+            "CARD_HOLDER_NAME": data["CARD_HOLDER_NAME"],
+            "CARD_EXPIRY_DATE": data["CARD_EXPIRY_DATE"],
+            "AMOUNT": payment.amount,
+            "MERCHANT_ID": merchant.merchant_id,
+            "MERCHANT_ACCOUNT_NUMBER": merchant_account_number,
+        }
+
+        try:
+            # Slanje POST zahteva ka PCC
+            pcc_response = requests.post("http://localhost:5002/process_payment", json=pcc_request)
+            
+            if pcc_response.status_code == 200:
+                return jsonify({"message": "Payment processed via PCC.", "response": pcc_response.json()}), 200
+            else:
+                return jsonify({"error": "PCC processing failed.", "details": pcc_response.json()}), pcc_response.status_code
+        except requests.exceptions.RequestException as e:
+            return jsonify({"error": "Failed to communicate with PCC.", "details": str(e)}), 500
 
 @app.route('/add_sample_data', methods=['GET'])
 def add_sample_data():

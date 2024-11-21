@@ -1,6 +1,18 @@
-// src/components/PaymentForm.js
 import React, { useState } from 'react';
 import axios from 'axios';
+import './App.css';
+
+// Modal Component
+const Modal = ({ message, onClose }) => {
+    return (
+        <div className="modal">
+            <div className="modal-content">
+                <span className="close" onClick={onClose}>&times;</span>
+                <p>{message}</p>
+            </div>
+        </div>
+    );
+};
 
 const PaymentForm = () => {
     const [paymentData, setPaymentData] = useState({
@@ -11,6 +23,9 @@ const PaymentForm = () => {
         payment_id: ''
     });
 
+    const [modalMessage, setModalMessage] = useState('');
+    const [showModal, setShowModal] = useState(false);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setPaymentData({ ...paymentData, [name]: value });
@@ -19,26 +34,33 @@ const PaymentForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Prvo proveriti da li je payment_id prosleđen
+        // Check if payment_id is provided
         if (!paymentData.payment_id) {
-            alert('Payment ID is required!');
+            setModalMessage('Payment ID is required!');
+            setShowModal(true);
             return;
         }
 
         try {
-            // Slanje podataka na backend (Flask API)
+            // Sending data to the backend (Flask API)
             const response = await axios.post(`http://localhost:5000/process_payment/${paymentData.payment_id}`, paymentData);
             
-            // Obrada odgovora
+            // Handle server response
             if (response.status === 200) {
-                alert('Payment processed successfully!');
+                setModalMessage(response.data.message || 'Payment processed successfully!');
             } else {
-                alert('Payment failed!');
+                setModalMessage(response.data.message || 'Payment failed!');
             }
         } catch (error) {
             console.error('Error processing payment', error);
-            alert('Error processing payment');
+            setModalMessage('Error processing payment');
         }
+
+        setShowModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowModal(false);
     };
 
     return (
@@ -102,6 +124,9 @@ const PaymentForm = () => {
                 </div>
                 <button type="submit">Submit Payment</button>
             </form>
+
+            {/* Display Modal */}
+            {showModal && <Modal message={modalMessage} onClose={handleCloseModal} />}
         </div>
     );
 };
