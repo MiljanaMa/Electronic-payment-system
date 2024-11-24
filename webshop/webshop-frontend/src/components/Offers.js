@@ -27,6 +27,24 @@ export default function Products() {
         });
       }, []);
 
+      const handleAddToCartClick = async (purchaseType, purchaseId) => {
+        try {
+          const response = await axiosInstance.post(`${purchaseType}s/buy`, {
+            purchaseId: purchaseId,
+            purchaseType: purchaseType,
+          });
+      
+          const { redirectUrl } = response.data;
+      
+          if (redirectUrl && redirectUrl.trim() !== "") {
+            window.location.href = redirectUrl;
+          } else {
+          }
+        } catch (error) {
+          console.error("Error adding product to cart:", error);
+        }
+      };
+
       useEffect(() => {
           axiosInstance.get('bundles').then(response => {
             setBundles(response.data);
@@ -77,7 +95,7 @@ export default function Products() {
                   <TableCell align="center">{product.description}</TableCell>
                   <TableCell align="center">{product.price}</TableCell>
                   <TableCell align='center'>
-                      <IconButton color='primary'>
+                      <IconButton color='primary' onClick={() => handleAddToCartClick("product", product.id)}>
                         < AddShoppingCartIcon/>
                       </IconButton>
                   </TableCell>
@@ -117,7 +135,7 @@ export default function Products() {
                     </IconButton>
                   </TableCell>
                   <TableCell align="center">
-                    <IconButton color="primary">
+                    <IconButton color="primary" onClick={() => handleAddToCartClick("bundle", bundle.id)}>
                       <AddShoppingCartIcon />
                     </IconButton>
                   </TableCell>

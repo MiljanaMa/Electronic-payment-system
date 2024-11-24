@@ -8,6 +8,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './utils/ProtectedRoute';
 import Profile from './components/Profile';
 import PaymentSubscription from './components/PaymentSubscription';
+import PaymentCheckout from './components/PaymentCheckout';
 
 function App() {
 
@@ -25,6 +26,7 @@ function App() {
             <Route path='/login' element={<Login></Login>} />
             <Route path='/profile' element={<ProtectedRoute><Profile></Profile></ProtectedRoute>} />
             <Route path="/paymentSubscription" element={<PaymentSubscription />} />
+            <Route path="/payment" element={<PaymentCheckout />} />
           </Routes>
         </BrowserRouter>    
         </AuthProvider>   

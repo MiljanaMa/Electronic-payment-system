@@ -13,4 +13,6 @@ import java.util.UUID;
 public interface ClientRepository extends JpaRepository<Client, String> {
     @Query("SELECT c FROM Client c WHERE c.username = :username")
     Optional<Client> findByUsername(@Param("username") String username);
+    @Query("SELECT c FROM Client c WHERE c.merchantId = :merchantId AND c.merchantPassword = :merchantPass")
+    Optional<Client> findByMerchantId(@Param("merchantId") String merchantId, @Param("merchantPass") String merchantPass);
 }
