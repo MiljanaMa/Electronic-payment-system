@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.HashMap;
@@ -25,8 +26,8 @@ public class PaymentMethodController {
         Set<PaymentMethodInfoDto> paymentMethodsDto = paymentMethodService.getAll();
         return ResponseEntity.ok(paymentMethodsDto);
     }
-    @GetMapping("/{transactionId}")
-    public ResponseEntity<Set<PaymentMethodInfoDto>> getClientPaymentMethods(@PathVariable("transactionId") String transactionId) {
+    @GetMapping("/transaction")
+    public ResponseEntity<Set<PaymentMethodInfoDto>> getClientPaymentMethods(@RequestBody String transactionId) {
         try{
             Set<PaymentMethodInfoDto> paymentMethodsDto = paymentMethodService.getByTransactionId(transactionId);
             return ResponseEntity.ok(paymentMethodsDto);
