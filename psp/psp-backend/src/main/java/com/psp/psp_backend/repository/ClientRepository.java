@@ -7,12 +7,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public interface ClientRepository extends JpaRepository<Client, String> {
     @Query("SELECT c FROM Client c WHERE c.username = :username")
     Optional<Client> findByUsername(@Param("username") String username);
     @Query("SELECT c FROM Client c WHERE c.merchantId = :merchantId AND c.merchantPassword = :merchantPass")
-    Optional<Client> findByMerchantId(@Param("merchantId") String merchantId, @Param("merchantPass") String merchantPass);
+    Optional<Client> findByMerchantIdAndPass(@Param("merchantId") String merchantId, @Param("merchantPass") String merchantPass);
+    @Query("SELECT c FROM Client c WHERE c.merchantId = :merchantId")
+    Optional<Client> findByMerchantId(@Param("merchantId") String merchantId);
 }

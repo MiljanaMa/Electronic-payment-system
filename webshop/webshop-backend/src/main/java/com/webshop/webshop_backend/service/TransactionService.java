@@ -73,9 +73,12 @@ public class TransactionService {
         }
         Transaction savedTransaction = transactionRepository.save(transaction);
         String redirectUrl = sendTransaction(savedTransaction);
+        //clean later
+        MerchantCredentials credentials = merchantService.getMerchantCredentials();
 
         Map<String, Object> response = new HashMap<>();
         response.put("redirectUrl", redirectUrl);
+        response.put("merchantId", credentials.getMerchantId());
         return response;
     }
 

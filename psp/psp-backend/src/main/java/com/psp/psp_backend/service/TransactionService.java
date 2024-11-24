@@ -15,7 +15,7 @@ public class TransactionService {
     @Autowired
     ClientRepository clientRepository;
     public String save(MerchantTransactionDto merchantTransactionDto) throws Exception {
-        Client client = clientRepository.findByMerchantId(merchantTransactionDto.getMerchantId(), merchantTransactionDto.getMerchantPass()).get();
+        Client client = clientRepository.findByMerchantIdAndPass(merchantTransactionDto.getMerchantId(), merchantTransactionDto.getMerchantPass()).get();
         if(client == null)
             throw new Exception("Client is not found");
         Transaction transaction = new Transaction(merchantTransactionDto, client);

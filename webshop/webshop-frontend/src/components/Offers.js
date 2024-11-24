@@ -10,6 +10,7 @@ import {Paper, Box, IconButton, Dialog, DialogActions, DialogTitle, DialogConten
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import axiosInstance from '../config/AxiosConfig';
+import Cookies from 'js-cookie';
 
 export default function Products() {
   
@@ -34,9 +35,15 @@ export default function Products() {
             purchaseType: purchaseType,
           });
       
-          const { redirectUrl } = response.data;
+          const { redirectUrl, merchantId } = response.data;
       
           if (redirectUrl && redirectUrl.trim() !== "") {
+            //document.cookie = `merchantId=${merchantId}; path=/; Secure; SameSite=Strict`;
+            Cookies.set('merchantId', merchantId, {
+              path: '/', 
+              secure: true, 
+              sameSite: 'Strict',
+            });
             window.location.href = redirectUrl;
           } else {
           }
