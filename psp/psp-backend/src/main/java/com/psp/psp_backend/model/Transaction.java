@@ -1,5 +1,6 @@
 package com.psp.psp_backend.model;
 
+import com.psp.psp_backend.dto.MerchantTransactionDto;
 import io.micrometer.common.lang.NonNull;
 import jakarta.persistence.*;
 
@@ -25,6 +26,13 @@ public class Transaction {
     private Date merchantTimestamp;
 
     public Transaction() {
+    }
+
+    public Transaction(MerchantTransactionDto merchantTransactionDto, Client client) {
+        this.client = client;
+        this.amount = merchantTransactionDto.getAmount();
+        this.merchantTransactionId = merchantTransactionDto.getMerchantTransactionId();
+        this.merchantTimestamp = merchantTransactionDto.getMerchantTimestamp();
     }
 
     public String getId() {

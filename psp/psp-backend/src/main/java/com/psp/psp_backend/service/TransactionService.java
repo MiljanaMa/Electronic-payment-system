@@ -18,7 +18,7 @@ public class TransactionService {
         Client client = clientRepository.findByMerchantId(merchantTransactionDto.getMerchantId(), merchantTransactionDto.getMerchantPass()).get();
         if(client == null)
             throw new Exception("Client is not found");
-        Transaction transaction = new Transaction();
+        Transaction transaction = new Transaction(merchantTransactionDto, client);
         return transactionRepository.save(transaction).getId();
     }
 
