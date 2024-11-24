@@ -10,6 +10,7 @@ import {Paper, Box, IconButton, Dialog, DialogActions, DialogTitle, DialogConten
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import axiosInstance from '../config/AxiosConfig';
+import Cookies from 'js-cookie';
 
 export default function Products() {
   
@@ -26,6 +27,30 @@ export default function Products() {
           console.error("There was an error fetching the products!", error);
         });
       }, []);
+
+      const handleAddToCartClick = async (purchaseType, purchaseId) => {
+        try {
+          const response = await axiosInstance.post(`${purchaseType}s/buy`, {
+            purchaseId: purchaseId,
+            purchaseType: purchaseType,
+          });
+      
+          const { redirectUrl, merchantId } = response.data;
+      
+          if (redirectUrl && redirectUrl.trim() !== "") {
+            //document.cookie = `merchantId=${merchantId}; path=/; Secure; SameSite=Strict`;
+            Cookies.set('merchantId', merchantId, {
+              path: '/', 
+              secure: true, 
+              sameSite: 'Strict',
+            });
+            window.location.href = redirectUrl;
+          } else {
+          }
+        } catch (error) {
+          console.error("Error adding product to cart:", error);
+        }
+      };
 
       useEffect(() => {
           axiosInstance.get('bundles').then(response => {
@@ -77,7 +102,7 @@ export default function Products() {
                   <TableCell align="center">{product.description}</TableCell>
                   <TableCell align="center">{product.price}</TableCell>
                   <TableCell align='center'>
-                      <IconButton color='primary'>
+                      <IconButton color='primary' onClick={() => handleAddToCartClick("product", product.id)}>
                         < AddShoppingCartIcon/>
                       </IconButton>
                   </TableCell>
@@ -117,7 +142,7 @@ export default function Products() {
                     </IconButton>
                   </TableCell>
                   <TableCell align="center">
-                    <IconButton color="primary">
+                    <IconButton color="primary" onClick={() => handleAddToCartClick("bundle", bundle.id)}>
                       <AddShoppingCartIcon />
                     </IconButton>
                   </TableCell>
