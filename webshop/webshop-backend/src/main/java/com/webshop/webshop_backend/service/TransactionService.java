@@ -2,11 +2,9 @@ package com.webshop.webshop_backend.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.webshop.webshop_backend.dto.BundleProductDto;
-import com.webshop.webshop_backend.dto.ProductDto;
-import com.webshop.webshop_backend.dto.PurchaseDto;
-import com.webshop.webshop_backend.dto.TransactionDto;
+import com.webshop.webshop_backend.dto.*;
 import com.webshop.webshop_backend.model.*;
+import com.webshop.webshop_backend.model.enums.TransactionStatus;
 import com.webshop.webshop_backend.model.enums.TransactionType;
 import com.webshop.webshop_backend.repository.BundleProductRepository;
 import com.webshop.webshop_backend.repository.ProductRepository;
@@ -48,6 +46,16 @@ public class TransactionService {
         } else {
             throw new IllegalArgumentException("Transaction API URL is not set in the properties file.");
         }
+    }
+    public void updateTransaction(PspTransactionDto pspTransactionDto) throws Exception {
+        Transaction transaction = transactionRepository.findById(pspTransactionDto.getMerchantOrderId()).get();
+        if (transaction == null)
+            throw new Exception("Transaction doesn't exist");
+        if(pspTransactionDto.getStatus().equals("SUCCESS"))
+            transaction.setStatus(TransactionStatus.SUCCESSFUL);
+        else
+            transaction.setStatus(TransactionStatus.FAILED);
+        transactionRepository.save(transaction);
     }
 
     public Map<String, Object> createTransaction(PurchaseDto purchaseDto, String username) throws Exception {
