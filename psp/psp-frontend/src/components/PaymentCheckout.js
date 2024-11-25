@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import axiosInstance from '../config/AxiosConfig';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {Button} from '@mui/material';
 import Cookies from 'js-cookie';
 
@@ -12,7 +12,6 @@ export default function PaymentCheckout() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [error, setError] = useState(null);
   const location = useLocation();
-  const navigate = useNavigate();
 
   const formContainerStyle = {
     display: 'flex',
@@ -36,12 +35,14 @@ export default function PaymentCheckout() {
     if (id) {
       setTransactionId(id);
     }
+    /*
     const m = Cookies.get('merchantId')
-    console.log(m)
-    setMerchantId(m);
+    console.log(m)*/
+    setMerchantId('');
   }, [location]);
 
   useEffect(() => {
+    setMerchantId('123456')
     if (!merchantId || !transactionId) return;
     
     //see if i will need it later
@@ -66,15 +67,25 @@ export default function PaymentCheckout() {
       setError('Please select a payment method');
       return;
     }
+    const transactionData = {
+      merchantId,
+      transactionId,
+      selectedPaymentMethod
+  };
 
     try {
-      const response = await axiosInstance.post('/api/checkout', {
-        transactionId,
-        paymentMethod: selectedPaymentMethod,
+      const response = await axiosInstance.post('/transaction/checkout', transactionData)
+      .then(response1 => {
+        Cookies.set('merchantId', merchantId, {
+          path: '/', 
+          secure: true, 
+          sameSite: 'Strict',
+        });
+        window.location.href = response1.data;
+      })
+      .catch(error => {
+        console.error('Error fetching available payment methods', error);
       });
-
-      // Redirect to success page or show confirmation message
-      navigate(`/success/${response.data.transactionId}`);
     } catch (err) {
       console.error('Checkout failed:', err);
       setError('Checkout failed. Please try again.');
