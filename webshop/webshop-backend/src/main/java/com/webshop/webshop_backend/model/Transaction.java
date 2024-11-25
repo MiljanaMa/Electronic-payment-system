@@ -3,10 +3,16 @@ package com.webshop.webshop_backend.model;
 import com.webshop.webshop_backend.model.enums.TransactionStatus;
 import com.webshop.webshop_backend.model.enums.TransactionType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
 @Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -26,9 +32,6 @@ public class Transaction {
     @Column(name = "purchase_id")
     private  String purchaseId;
 
-    public Transaction() {
-    }
-
     public Transaction(double amount, TransactionType type, User user, String purchaseId) {
         this.amount = amount;
         this.timestamp = new Date();
@@ -38,55 +41,4 @@ public class Transaction {
         this.purchaseId = purchaseId;
     }
 
-    public void setStatus(TransactionStatus status) {
-        this.status = status;
-    }
-
-    public TransactionType getType() {
-        return type;
-    }
-
-    public void setType(TransactionType type) {
-        this.type = type;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
-    public Date getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public String getPurchaseId() {
-        return purchaseId;
-    }
-
-    public void setPurchaseId(String purchaseId) {
-        this.purchaseId = purchaseId;
-    }
 }

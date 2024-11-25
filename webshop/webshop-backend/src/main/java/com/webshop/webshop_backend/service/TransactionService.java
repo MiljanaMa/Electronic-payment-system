@@ -3,6 +3,7 @@ package com.webshop.webshop_backend.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webshop.webshop_backend.dto.*;
+import com.webshop.webshop_backend.mapper.DtoUtils;
 import com.webshop.webshop_backend.model.*;
 import com.webshop.webshop_backend.model.enums.TransactionStatus;
 import com.webshop.webshop_backend.model.enums.TransactionType;
@@ -19,8 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.net.http.HttpHeaders;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class TransactionService {
@@ -133,6 +133,11 @@ public class TransactionService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse PSP response", e);
         }
+    }
+
+    public List<TransactionDto> getTransactionsByUser(String userId){
+        Set<TransactionDto> transactionsDtosSet = (Set<TransactionDto>) new DtoUtils().convertToDtos(transactionRepository.findTransactionsByUser(userId), new TransactionDto());
+        return new ArrayList<>(transactionsDtosSet);
     }
 
 }

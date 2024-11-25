@@ -20,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
@@ -103,5 +104,23 @@ public class AuthService {
             return new ResponseEntity<String>("Registration error", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    public User getLoggedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                "anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof org.springframework.security.oauth2.jwt.Jwt) {
+            Jwt jwt = (Jwt) principal;
+            String username = jwt.getClaimAsString("sub");
+            return userRepository.findByUsername(username).orElse(null);
+        }
+        return null;
+    }
+
 
 }
