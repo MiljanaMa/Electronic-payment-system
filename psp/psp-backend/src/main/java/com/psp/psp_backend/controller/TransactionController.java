@@ -1,5 +1,6 @@
 package com.psp.psp_backend.controller;
 
+import com.psp.psp_backend.dto.BankResponseDto;
 import com.psp.psp_backend.dto.MerchantTransactionDto;
 import com.psp.psp_backend.dto.PaymentCheckoutDto;
 import com.psp.psp_backend.service.TransactionService;
@@ -44,6 +45,15 @@ public class TransactionController {
         try {
             String response = transactionService.sendPayment(paymentCheckoutDto);
             return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+    @PostMapping("update")
+    public ResponseEntity<String> updateTransaction(@RequestBody BankResponseDto bankResponseDto){
+        try {
+            transactionService.updateTransaction(bankResponseDto);
+            return ResponseEntity.ok("SUCCESS");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
