@@ -78,8 +78,7 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests(auth -> {auth
                             .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/webshop/transactions/**").permitAll()
-                            .requestMatchers("/api/products/**").hasAuthority("ROLE_ADMIN")
+                            .requestMatchers("/api/webshop/transactions/**").permitAll()
                             .anyRequest().authenticated();
                 })
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

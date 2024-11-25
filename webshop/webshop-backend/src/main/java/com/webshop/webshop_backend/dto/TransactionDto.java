@@ -1,14 +1,17 @@
 package com.webshop.webshop_backend.dto;
 
 import com.webshop.webshop_backend.mapper.DtoEntity;
-import com.webshop.webshop_backend.model.User;
 import com.webshop.webshop_backend.model.enums.TransactionStatus;
 import com.webshop.webshop_backend.model.enums.TransactionType;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
-
 import java.util.Date;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class TransactionDto implements DtoEntity {
     private String id;
     @NotEmpty(message = "Amount is required")

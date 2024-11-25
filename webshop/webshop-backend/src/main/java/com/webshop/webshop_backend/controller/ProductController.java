@@ -31,7 +31,6 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("")
     public List<ProductDto> getProducts() {
         return productService.getProducts();

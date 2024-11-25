@@ -6,9 +6,13 @@ import Registration from './components/Registration';
 import RegistrationSuccessful from './components/RegistrationSuccessful';
 import Login from './components/Login';
 import Offers from './components/Offers';
+import Transactions from './components/Transactions';
 import Home from './components/Home';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './utils/ProtectedRoute';
+import theme from './utils/Theme'
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 
 function App() {
 
@@ -18,6 +22,8 @@ function App() {
 
   return (
       <div className='App'>
+         <ThemeProvider theme={theme}>
+         <CssBaseline />
         <AuthProvider>
          <BrowserRouter future={futureFlags}>  
          <Header></Header> 
@@ -28,9 +34,11 @@ function App() {
             <Route path='/registrationSuccessful' element={<RegistrationSuccessful></RegistrationSuccessful>} />
 
             <Route path='/offers' element={<ProtectedRoute><Offers></Offers></ProtectedRoute>} /> 
+            <Route path='/transactions' element={<ProtectedRoute><Transactions></Transactions></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>    
         </AuthProvider>   
+        </ThemeProvider>
     </div>
   );
 }
