@@ -1,7 +1,7 @@
 package com.psp.psp_backend.controller;
 
-import com.psp.psp_backend.dto.ClientDto;
 import com.psp.psp_backend.dto.MerchantTransactionDto;
+import com.psp.psp_backend.dto.PaymentCheckoutDto;
 import com.psp.psp_backend.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +25,6 @@ public class TransactionController {
 
     @PostMapping("")
     public ResponseEntity<Map<String, Object>> saveMerchantTransaction(@RequestBody MerchantTransactionDto merchantTransactionDto){
-        // Process the transaction
         try {
             String transactionId = transactionService.save(merchantTransactionDto);
             Map<String, Object> response = new HashMap<>();
@@ -38,6 +37,15 @@ public class TransactionController {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", "Failed to save merchant transaction: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+    }
+    @PostMapping("checkout")
+    public ResponseEntity<String> checkoutPayment(@RequestBody PaymentCheckoutDto paymentCheckoutDto){
+        try {
+            String response = transactionService.sendPayment(paymentCheckoutDto);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 }

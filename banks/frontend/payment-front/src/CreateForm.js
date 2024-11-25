@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './App.css';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+
+const location = useLocation();
+const [merchantId, setMerchantId] = useState('');
 
 // Modal Component
 const Modal = ({ message, onClose }) => {
@@ -13,6 +18,10 @@ const Modal = ({ message, onClose }) => {
         </div>
     );
 };
+useEffect(() => {
+    const m = Cookies.get('merchantId')
+    setMerchantId(m);
+  }, [location]);
 
 const PaymentForm = () => {
     const [paymentData, setPaymentData] = useState({

@@ -118,8 +118,8 @@ def generate_payment():
         return jsonify({"error": "Missing required fields"}), 400
 
     # Generisanje PAYMENT_ID i PAYMENT_URL
-    payment_id = f"PAY-{data['MERCHANT_ORDER_ID']}"
-    payment_url = f"http://localhost:5000/process_payment/{payment_id}"
+    payment_id = '1234'#f"PAY-{data['MERCHANT_ORDER_ID']}"
+    payment_url = f"http://localhost:3002/{payment_id}"
 
     # Snimanje podataka u bazu
     payment = PaymentTransaction(
