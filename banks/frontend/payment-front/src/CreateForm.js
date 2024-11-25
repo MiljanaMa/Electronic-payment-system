@@ -22,7 +22,7 @@ const PaymentForm = () => {
         SECURITY_CODE: '',
         CARD_HOLDER_NAME: '',
         CARD_EXPIRY_DATE: '',
-        payment_id: paymentId || '' 
+        PAYMENT_ID: paymentId || '' 
     });
     const location = useLocation();
     const [merchantId, setMerchantId] = useState('');
@@ -75,7 +75,6 @@ const PaymentForm = () => {
             console.error('Error processing payment', error);
         }
     
-        setShowModal(true);
     };
 
     const handleCloseModal = () => {

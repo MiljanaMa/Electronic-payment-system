@@ -142,7 +142,7 @@ def generate_payment():
 @app.route('/process_payment/<payment_id>', methods=['POST'])
 def process_payment(payment_id):
     data = request.json
-    required_fields = ["PAN", "SECURITY_CODE", "CARD_HOLDER_NAME", "CARD_EXPIRY_DATE"]
+    required_fields = ["PAN", "SECURITY_CODE", "CARD_HOLDER_NAME", "CARD_EXPIRY_DATE", "PAYMENT_ID"]
     
     if not all(field in data for field in required_fields):
         return jsonify({
@@ -206,7 +206,7 @@ def process_payment(payment_id):
                     "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
                     "PAYMENT_ID": payment.payment_id,
                     "STATUS_URL": "http://localhost:3001/error"
-                    }), pcc_response.status_code   
+                    }), 200   
         except requests.exceptions.RequestException as e:
                 return jsonify({
                     "MERCHANT_ORDER_ID": payment.merchant_order_id, 

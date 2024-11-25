@@ -69,7 +69,7 @@ public class TransactionService {
         bankPayload.put("MERCHANT_ID", transaction.getClient().getMerchantId());
         bankPayload.put("MERCHANT_PASSWORD", transaction.getClient().getMerchantPassword());
         bankPayload.put("AMOUNT", transaction.getAmount());
-        bankPayload.put("MERCHANT_ORDER_ID", transaction.getId());
+        bankPayload.put("MERCHANT_ORDER_ID", transaction.getMerchantTransactionId());
         bankPayload.put("MERCHANT_TIMESTAMP", transaction.getMerchantTimestamp());
         bankPayload.put("SUCCESS_URL", "http://localhost:3001/success");
         bankPayload.put("FAILED_URL", "http://localhost:3001/failed");
