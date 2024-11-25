@@ -9,6 +9,9 @@ import ProtectedRoute from './utils/ProtectedRoute';
 import Profile from './components/Profile';
 import PaymentSubscription from './components/PaymentSubscription';
 import PaymentCheckout from './components/PaymentCheckout';
+import SuccessPage from './components/SuccessPage';
+import FailedPage from './components/FailedPage';
+import ErrorPage from './components/ErrorPage';
 
 function App() {
 
@@ -27,6 +30,9 @@ function App() {
             <Route path='/profile' element={<ProtectedRoute><Profile></Profile></ProtectedRoute>} />
             <Route path="/paymentSubscription" element={<PaymentSubscription />} />
             <Route path="/payment" element={<PaymentCheckout />} />
+            <Route path="/success" element={<SuccessPage />} />
+            <Route path="/failed" element={<FailedPage />} />
+            <Route path="/error" element={<ErrorPage />} />
           </Routes>
         </BrowserRouter>    
         </AuthProvider>   
