@@ -28,6 +28,10 @@ export default function Header() {
     navigate('/offers');
 };
 
+const handleTransactionsClick = () => {
+  navigate('/transactions');
+};
+
   const handleLogoutClick = () => {
     logout();
     navigate('/login');
@@ -51,6 +55,7 @@ export default function Header() {
           ) : (
             <>
               <Button color="inherit" onClick={handleServicesClick}> Offers </Button>
+              <Button color="inherit" onClick={handleTransactionsClick}> Transactions </Button>
               <Button color="inherit" onClick={handleLogoutClick}> Logout </Button>
             </>
           )}
