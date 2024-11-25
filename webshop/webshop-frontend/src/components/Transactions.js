@@ -30,7 +30,7 @@ export default function Products() {
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
               <TableRow>
-                <TableCell align="center">Purchase id</TableCell>
+                <TableCell align="center">Purchase Id</TableCell>
                 <TableCell align="center">Amount</TableCell>
                 <TableCell align="center">Type</TableCell>
                 <TableCell align="center">Date</TableCell>
