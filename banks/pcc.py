@@ -39,8 +39,13 @@ def process_transaction():
     # Proverava da li su svi potrebni podaci prisutni
     required_fields = ["ACQUIRER_ORDER_ID", "ACQUIRER_TIMESTAMP","PAN", "SECURITY_CODE", "CARD_HOLDER_NAME", "CARD_EXPIRY_DATE", "AMOUNT", "MERCHANT_ID", "MERCHANT_ACCOUNT_NUMBER"]
     if not all(field in data for field in required_fields):
-        return jsonify({"error": "Missing required fields"}), 400
-
+        return jsonify({
+            "MERCHANT_ORDER_ID": data["ACQUIRER_ORDER_ID"],
+            "ACQUIRER_ORDER_ID": data["ACQUIRER_ORDER_ID"],
+            "ACQUIRER_TIMESTAMP": data["ACQUIRER_TIMESTAMP"],
+            "PAYMENT_ID": data["ACQUIRER_ORDER_ID"],
+            "STATUS_URL": "http://localhost:3031/error"
+        }), 400
     # Maskiranje PAN-a za sigurnost (prikaz samo poslednje 4 cifre)
     masked_pan = f"**** **** **** {data['PAN'][-4:]}"
     acquirer_order_id = data["ACQUIRER_ORDER_ID"]
@@ -77,17 +82,27 @@ def process_transaction():
             db.session.add(new_transaction)
             db.session.commit()
             return jsonify({
-                "message": "Transaction processed successfully.",
-                "issuer_order_id": issuer_data["issuer_order_id"],
-                "issuer_timestamp": issuer_data["issuer_timestamp"]
+                "MERCHANT_ORDER_ID": acquirer_order_id,
+                "ACQUIRER_ORDER_ID": acquirer_order_id,
+                "ACQUIRER_TIMESTAMP": acquirer_timestamp,
+                "PAYMENT_ID": acquirer_order_id,
+                "STATUS_URL": "http://localhost:3031/success"
             }), 200
         else:
             return jsonify({
-                "error": "Transaction failed at Issuer.",
-                "issuer_response": issuer_response.json()
+                "MERCHANT_ORDER_ID": acquirer_order_id,
+                "ACQUIRER_ORDER_ID": acquirer_order_id,
+                "ACQUIRER_TIMESTAMP": acquirer_timestamp,
+                "PAYMENT_ID": acquirer_order_id,
+                "STATUS_URL": "http://localhost:3031/error"
             }), issuer_response.status_code
     except requests.exceptions.RequestException as e:
-        return jsonify({"error": "Failed to communicate with Issuer.", "details": str(e)}), 500
-
+            return jsonify({
+                "MERCHANT_ORDER_ID": acquirer_order_id,
+                "ACQUIRER_ORDER_ID": acquirer_order_id,
+                "ACQUIRER_TIMESTAMP": acquirer_timestamp,
+                "PAYMENT_ID": acquirer_order_id,
+                "STATUS_URL": "http://localhost:3031/failed"
+            }), 500
 if __name__ == '__main__':
     app.run(port=5002)

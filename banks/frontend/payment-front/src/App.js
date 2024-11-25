@@ -1,13 +1,18 @@
 // src/App.js
 import React from 'react';
 import PaymentForm from './CreateForm';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+const futureFlags = {
+    v7_startTransition: true
+  };
 
 function App() {
     return (
-        <div className="App">
-            <h1>Payment Processing</h1>
-            <PaymentForm />
-        </div>
+        <BrowserRouter future={futureFlags}>  
+         <Routes>
+            <Route path='/:paymentId' element={<PaymentForm />} />
+         </Routes>
+       </BrowserRouter> 
     );
 }
 

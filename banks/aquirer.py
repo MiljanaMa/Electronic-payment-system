@@ -118,7 +118,7 @@ def generate_payment():
         return jsonify({"error": "Missing required fields"}), 400
 
     # Generisanje PAYMENT_ID i PAYMENT_URL
-    payment_id = '1234'#f"PAY-{data['MERCHANT_ORDER_ID']}"
+    payment_id = f"PAY-{data['MERCHANT_ORDER_ID']}"
     payment_url = f"http://localhost:3002/{payment_id}"
 
     # Snimanje podataka u bazu
@@ -142,14 +142,26 @@ def generate_payment():
 @app.route('/process_payment/<payment_id>', methods=['POST'])
 def process_payment(payment_id):
     data = request.json
-    required_fields = ["PAN", "SECURITY_CODE", "CARD_HOLDER_NAME", "CARD_EXPIRY_DATE"]
+    required_fields = ["PAN", "SECURITY_CODE", "CARD_HOLDER_NAME", "CARD_EXPIRY_DATE", "PAYMENT_ID"]
     
     if not all(field in data for field in required_fields):
-        return jsonify({"error": "Missing required fields"}), 400
+        return jsonify({
+        "MERCHANT_ORDER_ID": payment_id,
+        "ACQUIRER_ORDER_ID": payment_id,
+        "ACQUIRER_TIMESTAMP": payment_id,
+        "PAYMENT_ID": payment_id,
+        "STATUS_URL": "http://localhost:3031/error"
+    }), 200
     
     payment = PaymentTransaction.query.filter_by(payment_id=payment_id).first()
     if not payment:
-        return jsonify({"error": "Payment ID not found"}), 404
+        return jsonify({
+        "MERCHANT_ORDER_ID": payment_id,
+        "ACQUIRER_ORDER_ID": payment_id,
+        "ACQUIRER_TIMESTAMP": payment_id,
+        "PAYMENT_ID": payment_id,
+        "STATUS_URL": "http://localhost:3001/error"
+    }), 200
 
     # Proverava da li merchant postoji u bazi
     merchant = Merchant.query.filter_by(merchant_id=payment.merchant_id).first()
@@ -157,11 +169,11 @@ def process_payment(payment_id):
     if not merchant:
         return jsonify({"error": "Merchant not found"}), 404
     print(f"Merchant Name: {merchant.name}")
-
+    acquirer_order_id = str(uuid.uuid4())
+    acquirer_timestamp = datetime.now(timezone.utc).isoformat()
     creditCard1 = Card.query.filter_by(card_number=data["PAN"]).first()
     if not creditCard1:
-        acquirer_order_id = str(uuid.uuid4())
-        acquirer_timestamp = datetime.now(timezone.utc).isoformat()
+        
 
         # Podaci za slanje ka PCC
         pcc_request = {
@@ -175,26 +187,60 @@ def process_payment(payment_id):
             "MERCHANT_ID": merchant.merchant_id,
             "MERCHANT_ACCOUNT_NUMBER": merchant.bank_account_number,
         }
-
         try:
             # Slanje POST zahteva ka PCC
             pcc_response = requests.post("http://localhost:5002/process_payment", json=pcc_request)
             
             if pcc_response.status_code == 200:
-                return jsonify({"message": "Payment processed via PCC.", "response": pcc_response.json()}), 200
+                return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/success"
+                    }), 200            
             else:
-                return jsonify({"error": "PCC processing failed.", "details": pcc_response.json()}), pcc_response.status_code
+                return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/error"
+                    }), 200   
         except requests.exceptions.RequestException as e:
-            return jsonify({"error": "Failed to communicate with PCC.", "details": str(e)}), 500
-    # Provera da li se podaci sa kartice poklapaju
+                return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/failed"
+                    }), 200 
     if creditCard1.cvv != data["SECURITY_CODE"]:
-        return jsonify({"error": "Invalid security code"}), 400
+        return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/error"
+                    }), 200   
 
     if creditCard1.holder_name != data["CARD_HOLDER_NAME"]:
-        return jsonify({"error": "Card holder name mismatch"}), 400
+        return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/error"
+                    }), 200   
 
     if creditCard1.expiration_date != data["CARD_EXPIRY_DATE"]:
-        return jsonify({"error": "Card expiry date mismatch"}), 400
+        return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/error"
+                    }), 200   
     
     # Izvlači broj računa merchant-a
     merchant_account_number = merchant.bank_account_number
@@ -206,7 +252,13 @@ def process_payment(payment_id):
     # Izvlači broj računa kupca (to je PAN broj)
     creditCard = Card.query.filter_by(card_number=data["PAN"]).first()
     if not creditCard:
-        return jsonify({"error": "Card not found"}), 404
+        return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/error"
+                    }), 200   
     customer_account1 = creditCard.account_number
 
     customer_account_prefix = customer_account1[:3]
@@ -218,11 +270,23 @@ def process_payment(payment_id):
         customer_account = BankAccount.query.filter_by(account_number=customer_account1).first()
         print(f"bank account: {customer_account.account_number}")
         if not customer_account:
-            return jsonify({"error": "Customer account not found"}), 404
+            return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/error"
+                    }), 200   
         
         # Proverava da li kupac ima dovoljno sredstava
         if customer_account.balance < payment.amount:
-            return jsonify({"error": "Insufficient funds"}), 400
+            return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/error"
+                    }), 200   
         
         print(f"customer_account balance before: {customer_account.balance}")
         customer_account.balance -= payment.amount
@@ -234,7 +298,13 @@ def process_payment(payment_id):
 
         
         # Ako su banke iste i kupac ima dovoljno sredstava
-        return jsonify({"message": "Payment approved and processed."}), 200
+        return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/success"
+                    }), 200     
     else:
         # Različite banke
         acquirer_order_id = str(uuid.uuid4())
@@ -258,12 +328,29 @@ def process_payment(payment_id):
             pcc_response = requests.post("http://localhost:5002/process_payment", json=pcc_request)
             
             if pcc_response.status_code == 200:
-                return jsonify({"message": "Payment processed via PCC.", "response": pcc_response.json()}), 200
+                return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/success"
+                    }), 200             
             else:
-                return jsonify({"error": "PCC processing failed.", "details": pcc_response.json()}), pcc_response.status_code
+                return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/error"
+                    }),  200
         except requests.exceptions.RequestException as e:
-            return jsonify({"error": "Failed to communicate with PCC.", "details": str(e)}), 500
-
+            return jsonify({
+                    "MERCHANT_ORDER_ID": payment.merchant_order_id, 
+                    "ACQUIRER_ORDER_ID": acquirer_order_id, 
+                    "ACQUIRER_TIMESTAMP": acquirer_timestamp, 
+                    "PAYMENT_ID": payment.payment_id,
+                    "STATUS_URL": "http://localhost:3001/failed"
+                    }), 200 
 @app.route('/add_sample_data', methods=['GET'])
 def add_sample_data():
     # Fiksni podaci za bankovne račune

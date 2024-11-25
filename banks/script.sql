@@ -1,3 +1,3 @@
-UPDATE card
-SET account_number = '1236543210987654'
-WHERE id = 6;
+UPDATE bank_account
+SET balance = 200.0
+WHERE id = 2;
