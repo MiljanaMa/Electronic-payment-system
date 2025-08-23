@@ -6,8 +6,10 @@ import com.psp.psp_backend.dto.BankResponseDto;
 import com.psp.psp_backend.dto.MerchantTransactionDto;
 import com.psp.psp_backend.dto.PaymentCheckoutDto;
 import com.psp.psp_backend.model.Client;
+import com.psp.psp_backend.model.PaymentMethod;
 import com.psp.psp_backend.model.Transaction;
 import com.psp.psp_backend.repository.ClientRepository;
+import com.psp.psp_backend.repository.PaymentMethodRepository;
 import com.psp.psp_backend.repository.TransactionRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class TransactionService {
@@ -26,6 +29,8 @@ public class TransactionService {
     TransactionRepository transactionRepository;
     @Autowired
     ClientRepository clientRepository;
+    @Autowired
+    PaymentMethodRepository paymentMethodRepository;
     @Value("${transaction.api.url}")
     private String transactionApiUrl;
     private WebClient webClient;
@@ -55,14 +60,57 @@ public class TransactionService {
     }
     public String sendPayment(PaymentCheckoutDto paymentCheckoutDto) throws Exception {
         Client client = clientRepository.findByMerchantId(paymentCheckoutDto.getMerchantId()).get();
-        if(client == null)
+        if (client == null)
             throw new Exception("Client is not found");
         Transaction transaction = transactionRepository.findById(paymentCheckoutDto.getTransactionId()).get();
-        if(transaction == null)
+        if (transaction == null)
             throw new Exception("Transaction is not found");
-        Map<String, Object> payload = makeBankRequest(transaction);
-        Map<String, String> bankResponse = initiatePayment(payload);
-        return bankResponse.get("PAYMENT_URL");
+        PaymentMethod paymentMethod = paymentMethodRepository.getReferenceById(UUID.fromString(paymentCheckoutDto.getPaymentMethodId()));
+        switch (paymentMethod.getName()) {
+            case "bank":
+                Map<String, Object> payload = makeBankRequest(transaction);
+                Map<String, String> bankResponse = initiatePayment(payload);
+                return bankResponse.get("PAYMENT_URL");
+
+            case "paypal":
+                Map<String, Object> payPalPayload = makePayPalRequest(transaction);
+                return initiatePayPalPayment(payPalPayload);
+            default:
+                throw new Exception("Unsupported payment method: " + paymentMethod);
+        }
+    }
+
+    private String initiatePayPalPayment(Map<String, Object> payPalPayload) {
+        try {
+            String response =  webClient.post()
+                    .uri("http://localhost:8000/payments/initiate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(payPalPayload)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, String> responseMap = objectMapper.readValue(response, new TypeReference<Map<String, String>>() {});
+
+            // Vrati ceo map ili samo approve_url, zavisi šta frontend očekuje
+            // Ako frontend očekuje approve_url:
+            return responseMap.get("approve_url");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to communicate with Bank backend", e);
+        }
+    }
+
+    private static Map<String, Object> makePayPalRequest(Transaction transaction) {
+        Map<String, Object> payPalPayload = new HashMap<>();
+        payPalPayload.put("merchant_id", transaction.getClient().getMerchantId());
+        payPalPayload.put("merchant_password", transaction.getClient().getMerchantPassword());
+        payPalPayload.put("amount", transaction.getAmount());
+        payPalPayload.put("merchant_order_id", transaction.getMerchantTransactionId());
+        payPalPayload.put("success_url", "http://localhost:3001/success");
+        payPalPayload.put("failed_url", "http://localhost:3001/failed");
+        payPalPayload.put("error_url", "http://localhost:3001/error");
+
+        return payPalPayload;
     }
     private static Map<String, Object> makeBankRequest(Transaction transaction) {
         Map<String, Object> bankPayload = new HashMap<>();

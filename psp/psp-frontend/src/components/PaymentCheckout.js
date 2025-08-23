@@ -4,12 +4,13 @@ import axiosInstance from '../config/AxiosConfig';
 import { useLocation } from 'react-router-dom';
 import {Button} from '@mui/material';
 import Cookies from 'js-cookie';
+import axios from 'axios';
 
 export default function PaymentCheckout() {
-  const [transactionId, setTransactionId] = useState('240264c0-9c6d-411f-8086-e6ab65ef82ef');
-  const [merchantId, setMerchantId] = useState('');
+  const [transactionId, setTransactionId] = useState('0b21fab1-75e1-4013-bc8b-a37014e9d9e6');
+  const [merchantId, setMerchantId] = useState('123456');
   const [paymentMethods, setPaymentMethods] = useState([]);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [paymentMethodId, setSelectedPaymentMethod] = useState(null);
   const [error, setError] = useState(null);
   const location = useLocation();
 
@@ -63,28 +64,45 @@ export default function PaymentCheckout() {
   }, [transactionId, merchantId]);
 
   const handleCheckout = async () => {
-    if (!selectedPaymentMethod) {
+    if (!paymentMethodId) {
       setError('Please select a payment method');
       return;
     }
     const transactionData = {
       merchantId,
       transactionId,
-      selectedPaymentMethod
+      paymentMethodId
   };
+  const transactionData1 = {
+  merchantId: "123456",
+  transactionId: "0b21fab1-75e1-4013-bc8b-a37014e9d9e6",
+  paymentMethodId: "ccbb3567-81fe-4b75-af4d-c1035ae137e7"
+};
+
+try {
+  const response = await axios.post(
+    'http://localhost:8082/api/transaction/checkout',
+    transactionData1,
+    {
+      headers: { 'Content-Type': 'application/json' }
+    }
+  );
+  console.log('Response:', response.data);
+} catch (err) {
+  console.error('Error:', err.response ? err.response.data : err.message);
+}
 
     try {
-      const response = await axiosInstance.post('/transaction/checkout', transactionData)
+      const response = await axiosInstance.post('/transaction/checkout', transactionData, {
+                                                    headers: {
+                                                      'Content-Type': 'application/json',
+                                                    }
+      })
       .then(response1 => {
-        Cookies.set('merchantId', merchantId, {
-          path: '/', 
-          secure: true, 
-          sameSite: 'Strict',
-        });
         window.location.href = response1.data;
       })
       .catch(error => {
-        console.error('Error fetching available payment methods', error);
+        console.error('Error initiating payment methods', error);
       });
     } catch (err) {
       console.error('Checkout failed:', err);
@@ -108,7 +126,7 @@ export default function PaymentCheckout() {
             id={method.id}
             name="paymentMethod"
             value={method.id}
-            checked={selectedPaymentMethod === method.id}
+            checked={paymentMethodId === method.id}
             onChange={() => setSelectedPaymentMethod(method.id)}
           />
           <label htmlFor={method.id}>{method.name}</label>
