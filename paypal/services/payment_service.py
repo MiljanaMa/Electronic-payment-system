@@ -17,6 +17,7 @@ def initiate_payment_logic(req):
     transaction = Transaction(
         transaction_id=str(uuid.uuid4()),
         merchant_id=req.merchant_id,
+        merchant_order_id = req.merchant_order_id,
         amount=req.amount,
         currency="EUR",
         status="INITIATED",

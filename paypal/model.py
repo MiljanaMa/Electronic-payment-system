@@ -12,6 +12,7 @@ class Transaction(Base):
     currency = Column(String)
     status = Column(String)  # INITIATED, APPROVAL_PENDING, CAPTURED, FAILED
     paypal_order_id = Column(String, nullable=True)
+    merchant_order_id = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     success_url = Column(String, nullable=False)
@@ -45,6 +46,7 @@ class Subscription(Base):
     id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     merchant_id = Column(String, index=True)
     paypal_subscription_id = Column(String)
+    merchant_subscription_id = Column(String)
     plan_id = Column(String, index=True)
     status = Column(String, default="INITIATED")
     success_url = Column(String)

@@ -2,7 +2,7 @@ import uuid
 import certifi
 from fastapi import HTTPException
 import requests
-from config import PAYPAL_API_BASE, PAYPAL_CANCEL_URL, PAYPAL_RETURN_URL
+from config import PAYPAL_API_BASE, PAYPAL_CANCEL_URL, PAYPAL_SUBSCRIPTION_RETURN_URL
 from database import get_db
 from model import Merchant, Product, Subscription
 from services.db_service import _get_merchant
@@ -136,7 +136,7 @@ def create_paypal_subscription(db, req, subscription: Subscription, merchant: Me
             "locale": "en-US",
             "shipping_preference": "NO_SHIPPING",   # most digital subs don’t need shipping
             "user_action": "SUBSCRIBE_NOW",
-            "return_url": f"{PAYPAL_RETURN_URL}{subscription.id}",
+            "return_url": f"{PAYPAL_SUBSCRIPTION_RETURN_URL}{subscription.id}",
             "cancel_url": f"{PAYPAL_CANCEL_URL}{subscription.id}",
         }
     }
