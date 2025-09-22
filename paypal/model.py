@@ -60,7 +60,7 @@ class Product(Base):
     type = Column(String, default="SERVICE")  # PayPal: SERVICE
     category = Column(String, default="SOFTWARE")  # PayPal: SOFTWARE
     paypal_product_id = Column(String, unique=True, nullable=False)  # ID iz PayPala
-    product_id = Column(String, unique=True, nullable=False)
+    product_id = Column(String, unique=False, nullable=False)
     merchant_id = Column(String, index=True)
 
     # Veza ka planovima

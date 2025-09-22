@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import uvicorn
-from payments import router
+from router import router
 
 from seed import seed_data
 
