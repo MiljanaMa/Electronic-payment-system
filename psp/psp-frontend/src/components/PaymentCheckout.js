@@ -7,7 +7,8 @@ import Cookies from 'js-cookie';
 import axios from 'axios';
 
 export default function PaymentCheckout() {
-  const [transactionId, setTransactionId] = useState('0b21fab1-75e1-4013-bc8b-a37014e9d9e6');
+  const [transactionId, setTransactionId] = useState('');
+  const [subscriptionId, setSubscriptionId] = useState('');
   const [merchantId, setMerchantId] = useState('123456');
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [paymentMethodId, setSelectedPaymentMethod] = useState(null);
@@ -31,26 +32,21 @@ export default function PaymentCheckout() {
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const id = queryParams.get('transactionId');
+    var id = queryParams.get('transactionId');
+    let paymentType;
    
     if (id) {
       setTransactionId(id);
+      paymentType = "transaction"
+    }else if(queryParams.get("subscriptionId")){
+      id = queryParams.get("subscriptionId")
+      setSubscriptionId(id);
+      paymentType = "subscription"
     }
-    /*
-    const m = Cookies.get('merchantId')
-    console.log(m)*/
-    setMerchantId('');
-  }, [location]);
-
-  useEffect(() => {
-    setMerchantId('123456')
-    if (!merchantId || !transactionId) return;
-    
     //see if i will need it later
     //Cookies.remove('merchantId');
-
-    axiosInstance.get('paymentMethod/transaction', {
-      params: { transactionId, merchantId },
+    axiosInstance.get('paymentMethod/methods', {
+      params: { id, merchantId, paymentType },
   })
       .then(response => {
         const sortedPaymentMethods = response.data.sort((a, b) => {
@@ -61,54 +57,73 @@ export default function PaymentCheckout() {
       .catch(error => {
         console.error('Error fetching available payment methods', error);
       });
-  }, [transactionId, merchantId]);
+  }, [location, merchantId]);
 
-  const handleCheckout = async () => {
-    if (!paymentMethodId) {
-      setError('Please select a payment method');
+const handleCheckout = async () => {
+  if (!paymentMethodId) {
+    setError('Please select a payment method');
+    return;
+  }
+
+  try {
+    let response;
+
+    if (subscriptionId) {
+      // Subscription flow
+      const subscriptionData = {
+        merchantId,
+        subscriptionId,
+        paymentMethodId,
+      };
+
+      response = await axiosInstance.post(
+        '/subscription/checkout',
+        subscriptionData,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      window.location.href = response.data;
+
+    } else if (transactionId) {
+      // Transaction flow
+      const transactionData = {
+        merchantId,
+        transactionId,
+        paymentMethodId,
+      };
+
+      response = await axiosInstance.post(
+        '/transaction/checkout',
+        transactionData,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      window.location.href = response.data;
+
+    } else {
+      setError('Missing transaction or subscription ID');
       return;
     }
-    const transactionData = {
-      merchantId,
-      transactionId,
-      paymentMethodId
-  };
-  const transactionData1 = {
-  merchantId: "123456",
-  transactionId: "0b21fab1-75e1-4013-bc8b-a37014e9d9e6",
-  paymentMethodId: "ccbb3567-81fe-4b75-af4d-c1035ae137e7"
+  } catch (err) {
+    console.error('Checkout failed:', err);
+    setError('Checkout failed. Please try again.');
+  }
 };
 
-try {
-  const response = await axios.post(
-    'http://localhost:8082/api/transaction/checkout',
-    transactionData1,
-    {
-      headers: { 'Content-Type': 'application/json' }
-    }
-  );
-  console.log('Response:', response.data);
-} catch (err) {
-  console.error('Error:', err.response ? err.response.data : err.message);
-}
-
-    try {
-      const response = await axiosInstance.post('/transaction/checkout', transactionData, {
-                                                    headers: {
-                                                      'Content-Type': 'application/json',
-                                                    }
-      })
-      .then(response1 => {
-        window.location.href = response1.data;
-      })
-      .catch(error => {
-        console.error('Error initiating payment methods', error);
-      });
-    } catch (err) {
-      console.error('Checkout failed:', err);
-      setError('Checkout failed. Please try again.');
-    }
-  };
+  /*
+  try {
+    const response = await axios.post(
+      'http://localhost:8082/api/transaction/checkout',
+      transactionData1,
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+    console.log('Response:', response.data);
+  } catch (err) {
+    console.error('Error:', err.response ? err.response.data : err.message);
+  }
+*/
 
   if (paymentMethods.length === 0) {
     return <div>No payment methods available at the moment.</div>;

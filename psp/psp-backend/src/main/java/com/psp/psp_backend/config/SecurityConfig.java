@@ -76,7 +76,8 @@ public class SecurityConfig {
                             .requestMatchers("/api/auth/**").permitAll()
                             .requestMatchers("/actuator/**").permitAll()
                             .requestMatchers("/api/transaction/**").permitAll()
-                            .requestMatchers("/api/paymentMethod/transaction").permitAll()  // Permit specific path
+                            .requestMatchers("/api/subscription/**").permitAll()
+                            .requestMatchers("/api/paymentMethod/methods").permitAll()  // Permit specific path
                             .requestMatchers("/api/products/**").hasAuthority("ROLE_ADMIN")
                             .anyRequest().authenticated();
                 })

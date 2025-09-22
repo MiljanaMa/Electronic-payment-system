@@ -17,17 +17,17 @@ export default function FailedPage() {
 };
   useEffect(() => {
     const data = getCookieValues();
-    axiosInstance.post('transaction/update', data).then(response => {
+    axiosInstance.post('subscription/update', data).then(response => {
     })
     .catch(error => {
-      console.error("There was an error fetching the profile!", error);
+      console.error("There was an error!", error);
     });
   }, []);
     return (
       <Container maxWidth="xs">
       <Box sx={{ mt: 8, color: 'green' }}>
         <Typography variant="h3" align="center" gutterBottom>
-          PAYMENT FAILED
+          SUBSCRIPTION FAILED
         </Typography>
       </Box>
       </Container>

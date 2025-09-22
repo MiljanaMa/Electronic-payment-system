@@ -89,6 +89,11 @@ public class TransactionService {
         response.put("merchantId", credentials.getMerchantId());
         return response;
     }
+    public Transaction createSubscriptionTransaction(Subscription subscription) throws Exception {
+        Transaction transaction = new Transaction(subscription.getAmount(), TransactionType.BUNDLE,
+                subscription.getUser(), subscription.getPurchaseId());
+        return transactionRepository.save(transaction);
+    }
 
     public String sendTransaction(Transaction transaction) {
         MerchantCredentials credentials = merchantService.getMerchantCredentials();

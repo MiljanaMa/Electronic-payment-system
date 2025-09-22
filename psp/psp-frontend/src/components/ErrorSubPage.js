@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import axiosInstance from '../config/AxiosConfig';
 import Cookies from 'js-cookie';
 
-export default function FailedPage() {
+export default function ErrorPage() {
   const getCookieValues = () => {
 
     return {
@@ -15,19 +15,20 @@ export default function FailedPage() {
       status: "FAILED"
     };
 };
-  useEffect(() => {
-    const data = getCookieValues();
-    axiosInstance.post('transaction/update', data).then(response => {
-    })
-    .catch(error => {
-      console.error("There was an error fetching the profile!", error);
-    });
-  }, []);
+  
+useEffect(() => {
+  const data = getCookieValues();
+  axiosInstance.post('subscription/update', data).then(response => {
+  })
+  .catch(error => {
+    console.error("There was an error", error);
+  });
+}, []);
     return (
       <Container maxWidth="xs">
       <Box sx={{ mt: 8, color: 'green' }}>
         <Typography variant="h3" align="center" gutterBottom>
-          PAYMENT FAILED
+          ERROR, SUBSCRIPTION IS NOT ACTIVE
         </Typography>
       </Box>
       </Container>

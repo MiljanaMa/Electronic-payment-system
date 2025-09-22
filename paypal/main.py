@@ -1,12 +1,11 @@
 from fastapi import FastAPI
-from payments import router as payments_router
 import uvicorn
+from payments import router
 
 from seed import seed_data
 
 app = FastAPI(title="PayPal Service")
-
-app.include_router(payments_router)
+app.include_router(router)
 
 if __name__ == "__main__":
     seed_data()

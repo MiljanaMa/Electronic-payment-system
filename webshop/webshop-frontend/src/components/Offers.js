@@ -8,6 +8,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import {Paper, Box, IconButton, Dialog, DialogActions, DialogTitle, DialogContent, Button} from '@mui/material';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import axiosInstance from '../config/AxiosConfig';
 import Cookies from 'js-cookie';
@@ -77,6 +78,29 @@ export default function Products() {
           setOpenDialog(false);
           setBundleProducts([]);
         };
+        const handleSubscribeClick = async (purchaseType, purchaseId) => {
+          try {
+            const response = await axiosInstance.post(`${purchaseType}s/subscribe`, {
+              purchaseId: purchaseId,
+              purchaseType: purchaseType,
+            });
+        
+            const { redirectUrl, merchantId } = response.data;
+        
+            if (redirectUrl && redirectUrl.trim() !== "") {
+              //document.cookie = `merchantId=${merchantId}; path=/; Secure; SameSite=Strict`;
+              Cookies.set('merchantId', merchantId, {
+                path: '/', 
+                secure: true, 
+                sameSite: 'Strict',
+              });
+              window.location.href = redirectUrl;
+            } else {
+            }
+        } catch (error) {
+          console.error("Error adding product to cart:", error);
+        }
+            };
   
     return (
    
@@ -89,7 +113,7 @@ export default function Products() {
                 <TableCell align="center">Name</TableCell>
                 <TableCell align="center">Description</TableCell>
                 <TableCell align="center">Price</TableCell>
-                <TableCell align="center">Buy</TableCell>
+                <TableCell align="center">Subscribe/Buy</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -125,7 +149,7 @@ export default function Products() {
               <TableCell align="center">Description</TableCell>
               <TableCell align="center">Price</TableCell>
               <TableCell align="center">Details</TableCell>
-              <TableCell align="center">Buy</TableCell>
+              <TableCell align="center">Subscribe/Buy</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -142,6 +166,9 @@ export default function Products() {
                     </IconButton>
                   </TableCell>
                   <TableCell align="center">
+                    <IconButton color="primary" onClick={() => handleSubscribeClick("bundle", bundle.id)}>
+                      <AutorenewIcon  />
+                    </IconButton>
                     <IconButton color="primary" onClick={() => handleAddToCartClick("bundle", bundle.id)}>
                       <AddShoppingCartIcon />
                     </IconButton>

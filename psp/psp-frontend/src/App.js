@@ -12,6 +12,9 @@ import PaymentCheckout from './components/PaymentCheckout';
 import SuccessPage from './components/SuccessPage';
 import FailedPage from './components/FailedPage';
 import ErrorPage from './components/ErrorPage';
+import SuccessSubPage from './components/SuccessSubPage';
+import FailedSubPage from './components/FailedSubPage';
+import ErrorSubPage from './components/ErrorSubPage';
 
 function App() {
 
@@ -33,6 +36,9 @@ function App() {
             <Route path="/success" element={<SuccessPage />} />
             <Route path="/failed" element={<FailedPage />} />
             <Route path="/error" element={<ErrorPage />} />
+            <Route path="/success/sub" element={<SuccessSubPage />} />
+            <Route path="/failed/sub" element={<FailedSubPage />} />
+            <Route path="/error/sub" element={<ErrorSubPage />} />
           </Routes>
         </BrowserRouter>    
         </AuthProvider>   
