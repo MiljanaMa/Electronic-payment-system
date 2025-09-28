@@ -11,14 +11,27 @@ import com.psp.psp_backend.model.Transaction;
 import com.psp.psp_backend.repository.ClientRepository;
 import com.psp.psp_backend.repository.PaymentMethodRepository;
 import com.psp.psp_backend.repository.TransactionRepository;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.File;
+import reactor.netty.http.client.HttpClient;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -79,11 +92,37 @@ public class TransactionService {
                 throw new Exception("Unsupported payment method: " + paymentMethod);
         }
     }
+    public WebClient createSecureWebClient() throws Exception {
+        KeyStore trustStore = KeyStore.getInstance("PKCS12");
+        try (InputStream trustStoreStream = new ClassPathResource("truststore.jks").getInputStream()) {
+            trustStore.load(trustStoreStream, "truststorepassword".toCharArray());
+        }
+
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(trustStore);
+
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, tmf.getTrustManagers(), null);
+
+        SslContext nettySslContext = SslContextBuilder.forClient()
+                .trustManager(tmf)
+                .build();
+
+        HttpClient httpClient = HttpClient.create()
+                .secure(spec -> spec.sslContext(nettySslContext));
+
+        WebClient webClient = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .baseUrl("https://localhost:8000")
+                .build();
+        return webClient;
+    }
 
     private String initiatePayPalPayment(Map<String, Object> payPalPayload) {
         try {
-            String response =  webClient.post()
-                    .uri("http://localhost:8000/payments/initiate")
+            WebClient webClient = createSecureWebClient();
+            String response = webClient.post()
+                    .uri("/payments/initiate")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(payPalPayload)
                     .retrieve()

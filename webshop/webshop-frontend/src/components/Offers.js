@@ -113,7 +113,7 @@ export default function Products() {
                 <TableCell align="center">Name</TableCell>
                 <TableCell align="center">Description</TableCell>
                 <TableCell align="center">Price</TableCell>
-                <TableCell align="center">Subscribe/Buy</TableCell>
+                <TableCell align="center">Buy</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

@@ -9,13 +9,22 @@ import com.webshop.webshop_backend.model.*;
 import com.webshop.webshop_backend.model.enums.SubscriptionStatus;
 import com.webshop.webshop_backend.model.enums.TransactionStatus;
 import com.webshop.webshop_backend.repository.*;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.InputStream;
+import java.security.KeyStore;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,9 +46,28 @@ public class SubscriptionService {
     private String subscriptionApiUrl;
     private WebClient webClient;
     @PostConstruct
-    public void init() {
+    public void init() throws Exception{
         if (subscriptionApiUrl != null && !subscriptionApiUrl.isEmpty()) {
+            KeyStore trustStore = KeyStore.getInstance("PKCS12");
+            try (InputStream trustStoreStream = new ClassPathResource("truststore.jks").getInputStream()) {
+                trustStore.load(trustStoreStream, "truststorepassword".toCharArray());
+            }
+
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(trustStore);
+
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, tmf.getTrustManagers(), null);
+
+            SslContext nettySslContext = SslContextBuilder.forClient()
+                    .trustManager(tmf)
+                    .build();
+
+            HttpClient httpClient = HttpClient.create()
+                    .secure(spec -> spec.sslContext(nettySslContext));
+
             this.webClient = WebClient.builder()
+                    .clientConnector(new ReactorClientHttpConnector(httpClient))
                     .baseUrl(subscriptionApiUrl)
                     .build();
         } else {
