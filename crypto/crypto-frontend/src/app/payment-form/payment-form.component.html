@@ -1,0 +1,21 @@
+<div class="form-container">
+  <h2>Crypto Form</h2>
+  <form [formGroup]="paymentForm" (ngSubmit)="submitForm()">
+    <div class="form-group">
+      <label for="amount">Amount ({{ amountUSD }}$)</label>
+      <input type="number" id="amountETH" [value]="amountETH" disabled>
+    </div>
+
+    <div class="form-group">
+      <label for="senderWallet">Sender Wallet</label>
+      <input type="text" id="senderWallet" [value]="senderWallet" disabled>
+    </div>
+
+    <div class="form-group">
+      <label for="receiverWallet">Receiver Wallet</label>
+      <input type="text" id="receiverWallet" formControlName="receiverWallet" placeholder="Enter receiver wallet">
+    </div>
+
+    <button type="submit" [disabled]="paymentForm.invalid">Submit</button>
+  </form>
+</div>
