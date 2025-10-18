@@ -5,6 +5,7 @@ import Web3 from 'web3';
 import { PaymentService } from '../service/payment.service';
 import { ActivatedRoute } from '@angular/router';
 import { CookieService } from 'ngx-cookie-service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-payment-form',
@@ -103,20 +104,30 @@ export class PaymentFormComponent {
       console.log(response);
 
       const transactionHashString = this.web3.utils.bytesToHex(response.transactionHash);
-      alert(`Transaction successful: ${transactionHashString}`);
+      const etherscanLink = `https://sepolia.etherscan.io/tx/${transactionHashString}`;
+      Swal.fire({
+        title: 'Transaction Successful!',
+        html: `View on Etherscan: <a href="${etherscanLink}" target="_blank">${transactionHashString}</a>`,
+        icon: 'success',
+        allowOutsideClick: false, 
+        allowEscapeKey: false,
+        showConfirmButton: true,
+        confirmButtonText: 'Continue'
+      }).then(() => {
 
-      if (this.paymentId) {
-        this.paymentService.completeTransaction(this.paymentId, transactionHashString, "SUCCESSFUL")
-          .subscribe({
-          next: (res) => {
-            console.log('Transaction updated in backend:', res);
-            this.cookieService.set('MERCHANT_ORDER_ID', res.merchantOrderId, undefined, '/');
-            window.location.href = res.statusURL;
-          },
-          error: (err) => console.error('Failed to update transaction:', err)
+        if (this.paymentId) {
+          this.paymentService.completeTransaction(this.paymentId, transactionHashString, "SUCCESSFUL")
+            .subscribe({
+            next: (res) => {
+              console.log('Transaction updated in backend:', res);
+              this.cookieService.set('MERCHANT_ORDER_ID', res.merchantOrderId, undefined, '/');
+              window.location.href = res.statusURL;
+            },
+            error: (err) => console.error('Failed to update transaction:', err)
+          });
+          }
         });
-      }
-
+      
       } catch (error: any) {
         console.error(error);
         alert(`Transaction failed: ${error.message || error}`);
