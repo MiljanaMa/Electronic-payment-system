@@ -1,6 +1,6 @@
 <div class="form-container">
   <h2>Crypto Form</h2>
-  <form [formGroup]="paymentForm" (ngSubmit)="submitForm()">
+  <form (ngSubmit)="submitForm()">
     <div class="form-group">
       <label for="amount">Amount ({{ amountUSD }}$)</label>
       <input type="number" id="amountETH" [value]="amountETH" disabled>
@@ -13,9 +13,9 @@
 
     <div class="form-group">
       <label for="receiverWallet">Receiver Wallet</label>
-      <input type="text" id="receiverWallet" formControlName="receiverWallet" placeholder="Enter receiver wallet">
+      <input type="text" id="receiverWallet" [value]="receiverWallet" disabled>
     </div>
 
-    <button type="submit" [disabled]="paymentForm.invalid">Submit</button>
+    <button type="submit">Submit</button>
   </form>
 </div>

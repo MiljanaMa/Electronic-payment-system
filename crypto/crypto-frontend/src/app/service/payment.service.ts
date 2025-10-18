@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
+import { environment } from '../../env/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -20,4 +21,21 @@ export class PaymentService {
       })
       );
   }
+
+  getTransaction(id: string): Observable<{id: string, amount: number, receiverWallet: string }> {
+    return this.http.get<{id: string, amount: number, receiverWallet: string }>(
+      `${environment.apiUrl}transactions/${id}`
+    );
+  }
+
+  completeTransaction(id: string, transactionHash: string, status: 'SUCCESSFUL' | 'FAILED'): Observable<{ merchantOrderId: string; statusURL: string }> {
+    return this.http.put<{ merchantOrderId: string; statusURL: string }>(
+      `${environment.apiUrl}transactions/${id}/complete`,
+      {
+        transactionHash,
+        status
+      }
+    );
+  }
+
 }

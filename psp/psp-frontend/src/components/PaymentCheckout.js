@@ -9,7 +9,7 @@ export default function PaymentCheckout() {
   const [transactionId, setTransactionId] = useState('240264c0-9c6d-411f-8086-e6ab65ef82ef');
   const [merchantId, setMerchantId] = useState('');
   const [paymentMethods, setPaymentMethods] = useState([]);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [paymentMethodId, setSelectedPaymentMethod] = useState(null);
   const [error, setError] = useState(null);
   const location = useLocation();
 
@@ -63,18 +63,18 @@ export default function PaymentCheckout() {
   }, [transactionId, merchantId]);
 
   const handleCheckout = async () => {
-    if (!selectedPaymentMethod) {
+    if (!paymentMethodId) {
       setError('Please select a payment method');
       return;
     }
     const transactionData = {
       merchantId,
       transactionId,
-      selectedPaymentMethod
+      paymentMethodId: paymentMethodId
   };
 
     try {
-      const response = await axiosInstance.post('/transaction/checkout', transactionData)
+      await axiosInstance.post('/transaction/checkout', transactionData)
       .then(response1 => {
         Cookies.set('merchantId', merchantId, {
           path: '/', 
@@ -108,7 +108,7 @@ export default function PaymentCheckout() {
             id={method.id}
             name="paymentMethod"
             value={method.id}
-            checked={selectedPaymentMethod === method.id}
+            checked={paymentMethodId === method.id}
             onChange={() => setSelectedPaymentMethod(method.id)}
           />
           <label htmlFor={method.id}>{method.name}</label>

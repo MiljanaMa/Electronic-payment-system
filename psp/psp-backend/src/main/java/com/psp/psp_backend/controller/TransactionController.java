@@ -12,11 +12,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Controller
+@RestController
 @RequestMapping(value = "/api/transaction")
 public class TransactionController {
     @Value("${frontend.url}")
@@ -40,7 +41,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
-    @PostMapping("checkout")
+    @PostMapping("/checkout")
     public ResponseEntity<String> checkoutPayment(@RequestBody PaymentCheckoutDto paymentCheckoutDto){
         try {
             String response = transactionService.sendPayment(paymentCheckoutDto);
@@ -49,7 +50,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
-    @PostMapping("update")
+    @PostMapping("/update")
     public ResponseEntity<String> updateTransaction(@RequestBody BankResponseDto bankResponseDto){
         try {
             transactionService.updateTransaction(bankResponseDto);
