@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -59,7 +60,6 @@ public class SecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder());
         return new ProviderManager(authProvider);
     }
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
 
@@ -78,7 +78,7 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests(auth -> {auth
                             .requestMatchers("/api/auth/**").permitAll()
-                            .requestMatchers("/actuator/prometheus").permitAll()
+                            .requestMatchers("/actuator/**").permitAll()
                             .requestMatchers("/api/transaction/**").permitAll()
                             .requestMatchers("/api/subscription/**").permitAll()
                             .requestMatchers("/api/paymentMethod/methods").permitAll()  // Permit specific path
