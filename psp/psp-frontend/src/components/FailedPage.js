@@ -12,7 +12,7 @@ export default function FailedPage() {
       acquirerOrderId: Cookies.get('ACQUIRER_ORDER_ID'),
       paymentId: Cookies.get('PAYMENT_ID'),
       acquirerTimestamp: Cookies.get('ACQUIRER_TIMESTAMP'),
-      status: "SUCCESS"
+      status: "FAILED"
     };
 };
   useEffect(() => {

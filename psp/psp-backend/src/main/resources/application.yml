@@ -1,0 +1,30 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+  server:
+    port: 8082
+  tracing:
+    sampling:
+      probability: 1.0
+
+spring:
+  application:
+    name: psp-backend
+  security:
+    user:
+      name: prometheus
+      password: secret123
+
+tracing:
+  url: ${TRACING_URL:http://localhost:4318/v1/traces}
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-N/A},%X{spanId:-N/A}]"
+  file:
+    name: /logs/psp.log

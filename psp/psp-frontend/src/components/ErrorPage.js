@@ -12,7 +12,7 @@ export default function ErrorPage() {
       acquirerOrderId: Cookies.get('ACQUIRER_ORDER_ID'),
       paymentId: Cookies.get('PAYMENT_ID'),
       acquirerTimestamp: Cookies.get('ACQUIRER_TIMESTAMP'),
-      status: "ERROR"
+      status: "FAILED"
     };
 };
   

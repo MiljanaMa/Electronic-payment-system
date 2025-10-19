@@ -12,6 +12,7 @@ import axiosInstance from '../config/AxiosConfig';
 export default function Products() {
   
     const[transactions, setTransactions] = useState(null)
+    const[subscriptions, setSubscriptions] = useState(null)
 
     useEffect(() => {
         axiosInstance.get('/webshop/transactions').then(response => {
@@ -20,7 +21,15 @@ export default function Products() {
         .catch(error => {
           console.error("There was an error fetching the transactions!", error);
         });
+        axiosInstance.get('/webshop/subscriptions').then(response => {
+            setSubscriptions(response.data);
+        })
+        .catch(error => {
+          console.error("There was an error fetching the subscriptions!", error);
+        });
       }, []);
+      
+      
 
     return (
    
@@ -66,6 +75,49 @@ export default function Products() {
             </TableBody>
           </Table>
         </TableContainer>
+        <Box marginTop="100px" justifyContent="center" alignItems="center"> Subscriptions </Box>
+        <TableContainer component={Paper} style={{width: '70%'}}>
+          <Table sx={{ minWidth: 650 }} aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                <TableCell align="center">Purchase Id</TableCell>
+                <TableCell align="center">Amount</TableCell>
+                <TableCell align="center">Type</TableCell>
+                <TableCell align="center">Date</TableCell>
+                <TableCell align="center">Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {transactions !== null? transactions.map((transaction, index) => (
+                <TableRow
+                  key={transaction.id}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                >
+                  <TableCell align="center">{transaction.purchaseId}</TableCell>
+                  <TableCell align="center">{transaction.amount}</TableCell>
+                  <TableCell align="center">{transaction.type}</TableCell>
+                  <TableCell align="center">
+                    {new Date(transaction.timestamp).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                    })}
+                </TableCell>
+                  <TableCell align="center">{transaction.status}</TableCell>                
+                </TableRow>
+              )): (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center">Loading...</TableCell>
+                  </TableRow>
+                  )} 
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Box>
+      
+      
   )
 }

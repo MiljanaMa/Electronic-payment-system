@@ -1,0 +1,229 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: webshop
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: super
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: super
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+
+  webshop-backend:
+    build:
+      context: ./webshop/webshop-backend
+      dockerfile: Dockerfile
+    container_name: webshop-backend
+    environment:
+      POSTGRES_URL: jdbc:postgresql://db:5432/webshop
+      TRANSACTION_API_URL: https://psp-gateway:8089/api/transaction
+      SUBSCRIPTION_API_URL: https://psp-gatewayt:8089/api/subscription
+      TRACING_URL: http://jaeger:4318/v1/traces
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./monitoring/logs:/logs
+    depends_on:
+      - db
+    networks:
+      - default
+      - monitoring
+
+  webshop-frontend:
+    build:
+      context: ./webshop/webshop-frontend
+      dockerfile: Dockerfile
+    container_name: webshop-frontend
+    ports:
+      - "3005:443"
+    depends_on:
+      - webshop-backend
+
+  psp-backend:
+    build:
+      context: ./psp/psp-backend
+      dockerfile: Dockerfile
+    container_name: psp-backend
+    environment:
+      POSTGRES_URL: jdbc:postgresql://db:5432/psp
+      TRANSACTION_API_URL: https://bank:8090/payments/initiate
+      SUBSCRIPTION_API_URL: https://bank:8090/subscriptions/initiate
+      FRONTEND_URL: https://psp-frontend:3001/payment
+      FRONTEND_BASE_URL: https://psp-frontend:3001
+      EUREKA_URL: http://service-discovery:8761/eureka
+      TRACING_URL: http://jaeger:4318/v1/traces
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./monitoring/logs:/logs
+    depends_on:
+      - db
+    networks:
+      - default
+      - monitoring
+
+  psp-frontend:
+    build:
+      context: ./psp/psp-frontend
+      dockerfile: Dockerfile
+    container_name: psp-frontend
+    ports:
+      - "3001:443"
+    depends_on:
+      - psp-backend
+
+  psp-gateway:
+    build:
+      context: ./psp-gateway/psp-gateway
+      dockerfile: Dockerfile
+    container_name: psp-gateway
+    ports:
+      - "8089:8089"
+    environment:
+      EUREKA_URL: http://service-discovery:8761/eureka
+      PSP_BACKEND_URL: https://psp-backend:8082
+      WEBSHOP_BACKEND_URL: https://webshop-backend:8081
+    depends_on:
+      - psp-backend
+      - webshop-backend
+      - service-discovery
+  service-discovery:
+    build:
+      context: ./service-discovery/service-discovery
+      dockerfile: Dockerfile
+    container_name: service-discovery
+    ports:
+      - "8761:8761"
+
+  prometheus:
+    image: prom/prometheus:v2.35.0
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus/config/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--web.enable-lifecycle"
+    ports:
+      - 9090:9090
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana-oss:8.5.2
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - 4000:3000
+    volumes:
+      - grafana_storage:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning  # optional: for provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_DOMAIN=localhost
+      - GF_LOG_MODE=console file  # Fixed typo: was GF_LOG_MDOE
+      - GF_LOG_FILTERS=alerting.notifier.slack:debug alertmanager:debug ngalert:debug  # Fixed typos
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - 3100:3100
+    command:
+      - "--config.file=/etc/loki/local-config.yaml"
+    networks:
+      - monitoring
+
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: promtail
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/logs:/logs
+      - ./monitoring/promtail/config/promtail.yml:/etc/promtail/config.yml
+      - /var/log:/var/log:ro  # Added system logs
+    command:
+      - "--config.file=/etc/promtail/config.yml"
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    restart: unless-stopped
+    ports:
+      - 4318:4318
+      - 16686:16686
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - monitoring
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    restart: unless-stopped
+    ports:
+      - "8088:8080"  # Changed from 8088:8080 to 8081:8080 since you mentioned 8080 is taken
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg
+    privileged: true
+    networks:
+      - monitoring
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.1
+    container_name: node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.rootfs=/host'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - monitoring
+
+
+volumes:
+  postgres-data: 
+  grafana_storage:
+
+networks:
+  monitoring:
+    driver: bridge

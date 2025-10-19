@@ -11,14 +11,27 @@ import com.psp.psp_backend.model.Transaction;
 import com.psp.psp_backend.repository.ClientRepository;
 import com.psp.psp_backend.repository.PaymentMethodRepository;
 import com.psp.psp_backend.repository.TransactionRepository;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.File;
+import reactor.netty.http.client.HttpClient;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +46,8 @@ public class TransactionService {
     PaymentMethodRepository paymentMethodRepository;
     @Value("${transaction.api.url}")
     private String transactionApiUrl;
+    @Value("${frontend.base.url}")
+    private String frontendBaseUrl;
     private WebClient webClient;
     @Value("${crypto.api.url}")
     private String cryptoApiUrl;
@@ -84,6 +99,9 @@ public class TransactionService {
                 Map<String, Object> payload = makeBankRequest(transaction);
                 Map<String, String> bankResponse = initiatePayment(payload);
                 return bankResponse.get("PAYMENT_URL");
+            case "paypal":
+                Map<String, Object> payPalPayload = makePayPalRequest(transaction);
+                return initiatePayPalPayment(payPalPayload);
             case "crypto":
                 Map<String, Object> cryptoPayload = makeCryptoRequest(transaction);
                 Map<String, String> cryptoResponse = initiateCryptoPayment(cryptoPayload);
@@ -92,6 +110,67 @@ public class TransactionService {
                 throw new Exception("Unsupported payment method: " + paymentMethod);
         }
     }
+    public WebClient createSecureWebClient() throws Exception {
+        KeyStore trustStore = KeyStore.getInstance("PKCS12");
+        try (InputStream trustStoreStream = new ClassPathResource("truststore.jks").getInputStream()) {
+            trustStore.load(trustStoreStream, "truststorepassword".toCharArray());
+        }
+
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(trustStore);
+
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, tmf.getTrustManagers(), null);
+
+        SslContext nettySslContext = SslContextBuilder.forClient()
+                .trustManager(tmf)
+                .build();
+
+        HttpClient httpClient = HttpClient.create()
+                .secure(spec -> spec.sslContext(nettySslContext));
+
+        WebClient webClient = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .baseUrl("https://paypal:8000")
+                //.baseUrl("https://localhost:8000")
+                .build();
+        return webClient;
+    }
+
+    private String initiatePayPalPayment(Map<String, Object> payPalPayload) {
+        try {
+            WebClient webClient = createSecureWebClient();
+            String response = webClient.post()
+                    .uri("/payments/initiate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(payPalPayload)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, String> responseMap = objectMapper.readValue(response, new TypeReference<Map<String, String>>() {});
+
+            // Vrati ceo map ili samo approve_url, zavisi šta frontend očekuje
+            // Ako frontend očekuje approve_url:
+            return responseMap.get("approve_url");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to communicate with Bank backend", e);
+        }
+    }
+
+    private Map<String, Object> makePayPalRequest(Transaction transaction) {
+        Map<String, Object> payPalPayload = new HashMap<>();
+        payPalPayload.put("merchant_id", transaction.getClient().getMerchantId());
+        payPalPayload.put("merchant_password", transaction.getClient().getMerchantPassword());
+        payPalPayload.put("amount", transaction.getAmount());
+        payPalPayload.put("merchant_order_id", transaction.getMerchantTransactionId());
+        payPalPayload.put("success_url", frontendBaseUrl + "/success");
+        payPalPayload.put("failed_url", frontendBaseUrl + "/failed");
+        payPalPayload.put("error_url", frontendBaseUrl +"/error");
+
+        return payPalPayload;
+    }
+    //private Map<String, Object> makeBankRequest(Transaction transaction) {
 
     private static Map<String, Object> makeCryptoRequest(Transaction transaction) {
         Map<String, Object> cryptoPayload = new HashMap<>();
@@ -123,16 +202,16 @@ public class TransactionService {
         }
     }
 
-    private static Map<String, Object> makeBankRequest(Transaction transaction) {
+    private Map<String, Object> makeBankRequest(Transaction transaction) {
         Map<String, Object> bankPayload = new HashMap<>();
         bankPayload.put("MERCHANT_ID", transaction.getClient().getMerchantId());
         bankPayload.put("MERCHANT_PASSWORD", transaction.getClient().getMerchantPassword());
         bankPayload.put("AMOUNT", transaction.getAmount());
         bankPayload.put("MERCHANT_ORDER_ID", transaction.getMerchantTransactionId());
         bankPayload.put("MERCHANT_TIMESTAMP", transaction.getMerchantTimestamp());
-        bankPayload.put("SUCCESS_URL", "http://localhost:3001/success");
-        bankPayload.put("FAILED_URL", "http://localhost:3001/failed");
-        bankPayload.put("ERROR_URL", "http://localhost:3001/error");
+        bankPayload.put("SUCCESS_URL", frontendBaseUrl + "/success");
+        bankPayload.put("FAILED_URL", frontendBaseUrl + "/failed");
+        bankPayload.put("ERROR_URL", frontendBaseUrl + "/error");
         return bankPayload;
     }
     private static Map<String, Object> makeClientRequest(Transaction transaction, String status) {
@@ -162,7 +241,8 @@ public class TransactionService {
     private void sendClientTransactionUpdate(Map<String, Object> payload) {
         try {
             webClient.post()
-                    .uri("http://localhost:8089/api/webshop/transactions/update")
+                    //.uri("http://localhost:8089/api/webshop/transactions/update")
+                    .uri("http://psp-gateway:8089/api/webshop/transactions/update")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(payload)
                     .retrieve()

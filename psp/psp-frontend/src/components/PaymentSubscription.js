@@ -3,9 +3,6 @@ import axiosInstance from '../config/AxiosConfig';
 import {Box, Button} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-
-
-
 export default function PaymentSubscription() {
   const [availablePaymentMethods, setAvailablePaymentMethods] = useState([]);
   const [selectedPaymentMethods, setSelectedPaymentMethods] = useState([]);

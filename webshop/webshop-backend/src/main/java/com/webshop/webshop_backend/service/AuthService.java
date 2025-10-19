@@ -89,18 +89,21 @@ public class AuthService {
 
     public ResponseEntity<String> register(RegistrationDto registrationDto){
         try {
+            log.info("Starting user registration..");
             User user = (User) new DtoUtils().convertToEntity(new User(), registrationDto);
             Optional<User> foundUser = userRepository.findByUsername(user.getUsername());
             if(foundUser.isPresent()) {
+                log.info("User with this credentials already exists" + registrationDto.getUsername());
                 return new ResponseEntity<>("User with this credentials already exists", HttpStatus.BAD_REQUEST);
             }
 
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             user.setRole(roleRepository.findByName("ROLE_USER"));
             User registeredUser = userRepository.save(user);
-            log.info("Registration DTO: {}", registeredUser.getUsername());
+            log.info("Registration successful for: {}", registeredUser.getUsername());
             return new ResponseEntity<String>("User registered successfully", HttpStatus.CREATED);
         }catch (Exception e){
+            log.error("Registration request failed for:" + registrationDto.getUsername());
             return new ResponseEntity<String>("Registration error", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

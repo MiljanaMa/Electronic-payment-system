@@ -43,6 +43,7 @@ public class TransactionController {
     }
     @PostMapping("/checkout")
     public ResponseEntity<String> checkoutPayment(@RequestBody PaymentCheckoutDto paymentCheckoutDto){
+        System.out.println("CheckoutPayment called: ");
         try {
             String response = transactionService.sendPayment(paymentCheckoutDto);
             return ResponseEntity.ok(response);
