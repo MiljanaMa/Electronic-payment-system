@@ -46,6 +46,8 @@ public class TransactionService {
     PaymentMethodRepository paymentMethodRepository;
     @Value("${transaction.api.url}")
     private String transactionApiUrl;
+    @Value("${frontend.base.url}")
+    private String frontendBaseUrl;
     private WebClient webClient;
     @PostConstruct
     public void init() {
@@ -113,7 +115,8 @@ public class TransactionService {
 
         WebClient webClient = WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .baseUrl("https://localhost:8000")
+                .baseUrl("https://paypal:8000")
+                //.baseUrl("https://localhost:8000")
                 .build();
         return webClient;
     }
@@ -139,28 +142,28 @@ public class TransactionService {
         }
     }
 
-    private static Map<String, Object> makePayPalRequest(Transaction transaction) {
+    private Map<String, Object> makePayPalRequest(Transaction transaction) {
         Map<String, Object> payPalPayload = new HashMap<>();
         payPalPayload.put("merchant_id", transaction.getClient().getMerchantId());
         payPalPayload.put("merchant_password", transaction.getClient().getMerchantPassword());
         payPalPayload.put("amount", transaction.getAmount());
         payPalPayload.put("merchant_order_id", transaction.getMerchantTransactionId());
-        payPalPayload.put("success_url", "http://localhost:3001/success");
-        payPalPayload.put("failed_url", "http://localhost:3001/failed");
-        payPalPayload.put("error_url", "http://localhost:3001/error");
+        payPalPayload.put("success_url", frontendBaseUrl + "/success");
+        payPalPayload.put("failed_url", frontendBaseUrl + "/failed");
+        payPalPayload.put("error_url", frontendBaseUrl +"/error");
 
         return payPalPayload;
     }
-    private static Map<String, Object> makeBankRequest(Transaction transaction) {
+    private Map<String, Object> makeBankRequest(Transaction transaction) {
         Map<String, Object> bankPayload = new HashMap<>();
         bankPayload.put("MERCHANT_ID", transaction.getClient().getMerchantId());
         bankPayload.put("MERCHANT_PASSWORD", transaction.getClient().getMerchantPassword());
         bankPayload.put("AMOUNT", transaction.getAmount());
         bankPayload.put("MERCHANT_ORDER_ID", transaction.getMerchantTransactionId());
         bankPayload.put("MERCHANT_TIMESTAMP", transaction.getMerchantTimestamp());
-        bankPayload.put("SUCCESS_URL", "http://localhost:3001/success");
-        bankPayload.put("FAILED_URL", "http://localhost:3001/failed");
-        bankPayload.put("ERROR_URL", "http://localhost:3001/error");
+        bankPayload.put("SUCCESS_URL", frontendBaseUrl + "/success");
+        bankPayload.put("FAILED_URL", frontendBaseUrl + "/failed");
+        bankPayload.put("ERROR_URL", frontendBaseUrl + "/error");
         return bankPayload;
     }
     private static Map<String, Object> makeClientRequest(Transaction transaction, String status) {
@@ -190,7 +193,8 @@ public class TransactionService {
     private void sendClientTransactionUpdate(Map<String, Object> payload) {
         try {
             webClient.post()
-                    .uri("http://localhost:8089/api/webshop/transactions/update")
+                    //.uri("http://localhost:8089/api/webshop/transactions/update")
+                    .uri("http://psp-gateway:8089/api/webshop/transactions/update")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(payload)
                     .retrieve()

@@ -41,6 +41,8 @@ public class SubscriptionService {
     private WebClient webClient;
     @Value("${transaction.api.url}")
     private String transactionApiUrl;
+    @Value("${frontend.base.url}")
+    private String frontendBaseUrl;
     @PostConstruct
     public void init() {
         if (transactionApiUrl != null && !transactionApiUrl.isEmpty()) {
@@ -125,7 +127,7 @@ public class SubscriptionService {
         }
     }
 
-    private static Map<String, Object> makePayPalRequest(Subscription subscription) {
+    private Map<String, Object> makePayPalRequest(Subscription subscription) {
         Map<String, Object> payPalPayload = new HashMap<>();
         payPalPayload.put("merchant_id", subscription.getClient().getMerchantId());
         payPalPayload.put("merchant_password", subscription.getClient().getMerchantPassword());
@@ -134,9 +136,9 @@ public class SubscriptionService {
         payPalPayload.put("product_name", subscription.getProductName());
         payPalPayload.put("product_description", subscription.getProductDescription());
         payPalPayload.put("merchant_subscription_id", subscription.getMerchantSubscriptionId());
-        payPalPayload.put("success_url", "http://localhost:3001/success/sub");
-        payPalPayload.put("failed_url", "http://localhost:3001/failed/sub");
-        payPalPayload.put("error_url", "http://localhost:3001/error/sub");
+        payPalPayload.put("success_url", frontendBaseUrl + "/success/sub");
+        payPalPayload.put("failed_url", frontendBaseUrl + "/failed/sub");
+        payPalPayload.put("error_url", frontendBaseUrl + "/error/sub");
 
         return payPalPayload;
     }

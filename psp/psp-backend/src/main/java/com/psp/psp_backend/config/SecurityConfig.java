@@ -13,6 +13,7 @@ import com.psp.psp_backend.auth.JpaUserDetailsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -47,6 +48,8 @@ public class SecurityConfig {
     private RsaKeyConfigProperties rsaKeyConfigProperties;
     @Autowired
     private JpaUserDetailsService userDetailsService;
+    @Value("${frontend.base.url}")
+    private String frontendBaseUrl;
 
     @Bean
     public AuthenticationManager authManager() {
@@ -63,7 +66,8 @@ public class SecurityConfig {
         return  http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("https://localhost:3001", "https://localhost:8081", "https://localhost:3000", "https://localhost:8090"));
+                    //config.setAllowedOrigins(List.of(frontendBaseUrl, "https://localhost:8081", "https://localhost:3000", "https://localhost:8090"));
+                    config.setAllowedOrigins(List.of(frontendBaseUrl, "https://webshop-backend:8081", "https://webshop-frontend:3000", "https://bank:8090"));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
                     config.setAllowCredentials(true);
@@ -74,7 +78,7 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests(auth -> {auth
                             .requestMatchers("/api/auth/**").permitAll()
-                            .requestMatchers("/actuator/**").permitAll()
+                            .requestMatchers("/actuator/prometheus").permitAll()
                             .requestMatchers("/api/transaction/**").permitAll()
                             .requestMatchers("/api/subscription/**").permitAll()
                             .requestMatchers("/api/paymentMethod/methods").permitAll()  // Permit specific path
