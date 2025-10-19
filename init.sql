@@ -1,2 +1,0 @@
-CREATE DATABASE webshop;
-CREATE DATABASE psp;
