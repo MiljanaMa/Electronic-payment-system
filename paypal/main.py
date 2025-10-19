@@ -23,10 +23,11 @@ if __name__ == "__main__":
     config = uvicorn.Config(
         app=app,
         host="0.0.0.0",
-        port=8000,
+        port=8087,
         reload=True,
-        ssl_certfile="./certs/localhost+2.crt",
-        ssl_keyfile="./certs/localhost+2-key.pem"
+        ssl_certfile="C:/Users/Miljana/Documents/SEP/Electronic-payment-system/paypal/certs/localhost+2.crt",
+        ssl_keyfile="C:/Users/Miljana/Documents/SEP/Electronic-payment-system/paypal/certs/localhost+2-key.pem"
+
     )
 
     server = uvicorn.Server(config)

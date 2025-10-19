@@ -10,6 +10,7 @@ def _get_merchant(db, merchant_id: str) -> Merchant:
 
 def _get_transaction(db, transaction_id: str) -> Transaction:
     transaction = db.query(Transaction).filter(Transaction.transaction_id == transaction_id).first()
+    print(transaction.transaction_id)
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
     return transaction
