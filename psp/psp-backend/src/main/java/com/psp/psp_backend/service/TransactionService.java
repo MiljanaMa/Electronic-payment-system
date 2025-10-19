@@ -49,6 +49,9 @@ public class TransactionService {
     @Value("${frontend.base.url}")
     private String frontendBaseUrl;
     private WebClient webClient;
+    @Value("${crypto.api.url}")
+    private String cryptoApiUrl;
+    private WebClient webClientCrypto;
     @PostConstruct
     public void init() {
         if (transactionApiUrl != null && !transactionApiUrl.isEmpty()) {
@@ -57,6 +60,13 @@ public class TransactionService {
                     .build();
         } else {
             throw new IllegalArgumentException("Transaction API URL is not set in the properties file.");
+        }
+        if (cryptoApiUrl != null && !cryptoApiUrl.isEmpty()) {
+            this.webClientCrypto = WebClient.builder()
+                    .baseUrl(cryptoApiUrl)
+                    .build();
+        } else {
+            throw new IllegalArgumentException("Crypto API URL is not set in the properties file.");
         }
     }
     public String save(MerchantTransactionDto merchantTransactionDto) throws Exception {
@@ -73,23 +83,29 @@ public class TransactionService {
         Map<String, Object> payload = makeClientRequest(transaction, bankResponseDto.getStatus());
         sendClientTransactionUpdate(payload);
     }
+
     public String sendPayment(PaymentCheckoutDto paymentCheckoutDto) throws Exception {
         Client client = clientRepository.findByMerchantId(paymentCheckoutDto.getMerchantId()).get();
-        if (client == null)
+        if (client == null) {
             throw new Exception("Client is not found");
+        }
         Transaction transaction = transactionRepository.findById(paymentCheckoutDto.getTransactionId()).get();
-        if (transaction == null)
+        if (transaction == null) {
             throw new Exception("Transaction is not found");
+        }
         PaymentMethod paymentMethod = paymentMethodRepository.getReferenceById(UUID.fromString(paymentCheckoutDto.getPaymentMethodId()));
         switch (paymentMethod.getName()) {
             case "bank":
                 Map<String, Object> payload = makeBankRequest(transaction);
                 Map<String, String> bankResponse = initiatePayment(payload);
                 return bankResponse.get("PAYMENT_URL");
-
             case "paypal":
                 Map<String, Object> payPalPayload = makePayPalRequest(transaction);
                 return initiatePayPalPayment(payPalPayload);
+            case "crypto":
+                Map<String, Object> cryptoPayload = makeCryptoRequest(transaction);
+                Map<String, String> cryptoResponse = initiateCryptoPayment(cryptoPayload);
+                return cryptoResponse.get("PAYMENT_URL");
             default:
                 throw new Exception("Unsupported payment method: " + paymentMethod);
         }
@@ -154,6 +170,38 @@ public class TransactionService {
 
         return payPalPayload;
     }
+    //private Map<String, Object> makeBankRequest(Transaction transaction) {
+
+    private static Map<String, Object> makeCryptoRequest(Transaction transaction) {
+        Map<String, Object> cryptoPayload = new HashMap<>();
+        cryptoPayload.put("MERCHANT_ID", transaction.getClient().getMerchantId());
+        cryptoPayload.put("AMOUNT", transaction.getAmount());
+        cryptoPayload.put("MERCHANT_ORDER_ID", transaction.getMerchantTransactionId());
+        cryptoPayload.put("SUCCESS_URL", "http://localhost:3001/success");
+        cryptoPayload.put("FAILED_URL", "http://localhost:3001/failed");
+        cryptoPayload.put("ERROR_URL", "http://localhost:3001/error");
+        return cryptoPayload;
+    }
+
+
+    private Map<String, String> initiateCryptoPayment(Map<String, Object> payload) {
+        try {
+            String response =  webClientCrypto.post()
+                    .uri("")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(payload)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, String> responseMap = objectMapper.readValue(response, new TypeReference<Map<String, String>>() {});
+            return responseMap;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to communicate with crypto backend", e);
+        }
+    }
+
     private Map<String, Object> makeBankRequest(Transaction transaction) {
         Map<String, Object> bankPayload = new HashMap<>();
         bankPayload.put("MERCHANT_ID", transaction.getClient().getMerchantId());

@@ -51,7 +51,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
-    @PostMapping("update")
+    @PostMapping("/update")
     public ResponseEntity<String> updateTransaction(@RequestBody BankResponseDto bankResponseDto){
         try {
             transactionService.updateTransaction(bankResponseDto);
