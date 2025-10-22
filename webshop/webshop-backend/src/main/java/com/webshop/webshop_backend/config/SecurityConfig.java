@@ -70,7 +70,7 @@ public class SecurityConfig {
         return  http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("https://localhost:3005", "https://localhost:8089"));
+                    config.setAllowedOrigins(List.of("https://localhost:3005", "https://localhost:8089", "https://localhost:8082"));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
                     config.setAllowCredentials(true);
@@ -83,6 +83,7 @@ public class SecurityConfig {
                             .requestMatchers("/api/auth/**").permitAll()
                             .requestMatchers("/actuator/prometheus").permitAll()
                             .requestMatchers("/api/webshop/transactions/**").permitAll()
+                            .requestMatchers("/api/bundles/subscription/update").permitAll()
                             .anyRequest().authenticated();
                 })
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

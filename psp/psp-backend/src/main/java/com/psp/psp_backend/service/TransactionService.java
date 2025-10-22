@@ -110,7 +110,7 @@ public class TransactionService {
                 throw new Exception("Unsupported payment method: " + paymentMethod);
         }
     }
-    public WebClient createSecureWebClient() throws Exception {
+    public WebClient createSecureWebClient(String url) throws Exception {
         KeyStore trustStore = KeyStore.getInstance("PKCS12");
         try (InputStream trustStoreStream = new ClassPathResource("truststore.jks").getInputStream()) {
             trustStore.load(trustStoreStream, "truststorepassword".toCharArray());
@@ -131,15 +131,16 @@ public class TransactionService {
 
         WebClient webClient = WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .baseUrl("https://paypal:8000")
-                //.baseUrl("https://localhost:8000")
+                //.baseUrl("https://paypal:8000")
+                //.baseUrl("https://localhost:8087")
+                .baseUrl(url)
                 .build();
         return webClient;
     }
 
     private String initiatePayPalPayment(Map<String, Object> payPalPayload) {
         try {
-            WebClient webClient = createSecureWebClient();
+            WebClient webClient = createSecureWebClient("https://localhost:8087");
             String response = webClient.post()
                     .uri("/payments/initiate")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -240,16 +241,26 @@ public class TransactionService {
     }
     private void sendClientTransactionUpdate(Map<String, Object> payload) {
         try {
+            WebClient webClient = createSecureWebClient("https://localhost:8081");
+            String response = webClient.post()
+                    .uri("/api/webshop/transactions/update")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(payload)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            ObjectMapper objectMapper = new ObjectMapper();
+            /*
             webClient.post()
-                    //.uri("http://localhost:8089/api/webshop/transactions/update")
-                    .uri("http://psp-gateway:8089/api/webshop/transactions/update")
+                    .uri("https://localhost:8089/api/webshop/transactions/update")
+                    //.uri("http://psp-gateway:8089/api/webshop/transactions/update")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(payload)
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
             //delete later
-            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectMapper objectMapper = new ObjectMapper();*/
         } catch (Exception e) {
             throw new RuntimeException("Failed to communicate with Bank backend", e);
         }

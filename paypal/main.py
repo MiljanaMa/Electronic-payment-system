@@ -7,15 +7,6 @@ from seed import seed_data
 app = FastAPI(title="PayPal Service")
 app.include_router(router)
 
-import ssl
-from fastapi import FastAPI
-from router import router
-from seed import seed_data
-import uvicorn
-
-app = FastAPI(title="PayPal Service")
-app.include_router(router)
-
 if __name__ == "__main__":
     seed_data()
 

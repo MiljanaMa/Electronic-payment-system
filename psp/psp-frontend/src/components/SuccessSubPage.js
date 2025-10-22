@@ -8,7 +8,7 @@ export default function SuccessPage() {
   const getCookieValues = () => {
 
     return {
-      merchantOrderId: Cookies.get('MERCHANT_ORDER_ID'),
+      merchantSubscriptionId: Cookies.get('MERCHANT_ORDER_ID'),
       acquirerOrderId: Cookies.get('ACQUIRER_ORDER_ID'),
       paymentId: Cookies.get('PAYMENT_ID'),
       acquirerTimestamp: Cookies.get('ACQUIRER_TIMESTAMP'),

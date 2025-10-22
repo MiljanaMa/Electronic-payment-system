@@ -27,4 +27,4 @@ logging:
   pattern:
     level: "%5p [${spring.application.name:},%X{traceId:-N/A},%X{spanId:-N/A}]"
   file:
-    name: /logs/psp.log
+    name: C:\\Users\\Miljana\\Documents\\SEP\\Electronic-payment-system\\monitoring\\logs\\psp.log

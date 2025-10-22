@@ -81,7 +81,7 @@ public class SubscriptionService {
                 throw new Exception("Unsupported payment method: " + paymentMethod);
         }
     }
-    public WebClient createSecureWebClient() throws Exception {
+    public WebClient createSecureWebClient(String url) throws Exception {
         KeyStore trustStore = KeyStore.getInstance("PKCS12");
         try (InputStream trustStoreStream = new ClassPathResource("truststore.jks").getInputStream()) {
             trustStore.load(trustStoreStream, "truststorepassword".toCharArray());
@@ -102,13 +102,13 @@ public class SubscriptionService {
 
         WebClient webClient = WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .baseUrl("https://localhost:8000")
+                .baseUrl(url)
                 .build();
         return webClient;
     }
     private String initiatePayPalPayment(Map<String, Object> payPalPayload) {
         try {
-            WebClient webClient = createSecureWebClient();
+            WebClient webClient = createSecureWebClient("https://localhost:8087");
             String response =  webClient.post()
                     .uri("subscriptions/initiate")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -151,20 +151,20 @@ public class SubscriptionService {
     }
     private static Map<String, Object> makeClientRequest(Subscription subscription, String status) {
         Map<String, Object> webShopPayload = new HashMap<>();
-        webShopPayload.put("merchantOrderId", subscription.getMerchantSubscriptionId());
+        webShopPayload.put("merchantSubscriptionId", subscription.getMerchantSubscriptionId());
         webShopPayload.put("status", status);
         return webShopPayload;
     }
     private void sendClientSubscriptionUpdate(Map<String, Object> payload) {
         try {
-            webClient.post()
-                    .uri("http://localhost:8089/api/webshop/bundles/subscription/update")
+            WebClient webClient = createSecureWebClient("https://localhost:8081");
+            String response =  webClient.post()
+                    .uri("/api/bundles/subscription/update")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(payload)
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
-            //delete later
             ObjectMapper objectMapper = new ObjectMapper();
         } catch (Exception e) {
             throw new RuntimeException("Failed to communicate with Webshop backend", e);

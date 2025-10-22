@@ -9,12 +9,15 @@ def seed_data():
     #Base.metadata.create_all(bind=engine)
     db = next(get_db())
     try:
+        db = SessionLocal()
+        merchants = db.query(Merchant).all()
+        for m in merchants:
+            print(m.merchant_id, m.paypal_client_id, m.paypal_secret)
         # Proveri da li vec ima usera
-        if not db.query(Merchant).first():
-            user1 = Merchant(merchant_id="123456", paypal_client_id="AWxmxxO_s2I9BserUKGNEkqTFsNYhXWLVIHx2xk4NYUDUaPFHbVdlOe_HkPxwmVPryHPgVHOKndLjI8h",
-                             paypal_secret="ELOowKx_lT_Agey_usSDLSRZ_wJUvwM6pHE6M9jzrwvqCCxndOhuHlg_Y7IL28torzAOMhv-gdzhjsvo")
-            db.add_all([user1])
-            db.commit()
+        user2 = db.query(Merchant).first()
+        user2.paypal_client_id = "AQnfSgZ6fao-f_NeVupeLsulKlzg596_sYu2PLhTy7tQWmC4hBZKSjKyUBKAd4WVQuCmB1VLzd-M4anJ"
+        user2.paypal_secret = "EHrnTGP7wjnhRqWUuq3FBMoZKZ7tiFRh60sk-0NdNtO-gasV_FVU4Nzklqs5EKZ945ZlI3GYDZ5_ud6Y"
+        db.commit()
         """"
         if not db.query(Transaction).first():
             t1 = Transaction(amount=100, status="PENDING", user_id=1)

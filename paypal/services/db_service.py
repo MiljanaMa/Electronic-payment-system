@@ -27,6 +27,7 @@ def save_subscription(db, subscription: Subscription):
 
 def update_subscription_status(internal_id: str, paypal_subscription_id: str, status: str):
     db = next(get_db())
+    print(internal_id)
     subscription = db.query(Subscription).filter(Subscription.id == internal_id).first()
     if not subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")

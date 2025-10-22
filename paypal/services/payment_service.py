@@ -12,8 +12,8 @@ from services.paypal import get_paypal_access_token
 
 def initiate_payment_logic(req):
     db = next(get_db())
+    print(req.merchant_id)
     merchant = _get_merchant(db, req.merchant_id)
-
     transaction = Transaction(
         transaction_id=str(uuid.uuid4()),
         merchant_id=req.merchant_id,
@@ -31,8 +31,10 @@ def initiate_payment_logic(req):
 
     try:
         approve_url = create_paypal_order(transaction, merchant)
+        print(approve_url)
     except HTTPException as e:
         transaction.status = "FAILED"
+        print("FAILED")
         db.commit()
         raise HTTPException(status_code=400, detail=f"Could not initiate PayPal order: {str(e)}")
 

@@ -27,7 +27,7 @@ def initiate_subscription(req: InitiateSubscriptionRequest):
     return result
 
 @router.get("/paypal/return/{transaction_id}")
-def paypal_return(transaction_id: str, token: str = None):
+def paypal_return(transaction_id: str, token: str = None, PayerID: str = None):
     print(transaction_id)
     db = next(get_db())
     transaction = db.query(Transaction).filter(Transaction.transaction_id == transaction_id).first()
@@ -38,6 +38,7 @@ def paypal_return(transaction_id: str, token: str = None):
         return RedirectResponse(transaction.error_url)
     capture_resp = capture_paypal_order(transaction, merchant, token)
     db.commit()
+    print(transaction.success_url)
     #treba dodati sta staviti u cookie
     response = RedirectResponse(url=transaction.success_url)
     response.set_cookie("MERCHANT_ORDER_ID", transaction.merchant_order_id)
@@ -62,6 +63,7 @@ def paypal_return(internal_id: str, subscription_id: str, ba_token: str, token: 
         status="ACTIVE"
     )
     response = RedirectResponse(url=subscription.success_url)
+    print(subscription.merchant_subscription_id)
     response.set_cookie("MERCHANT_ORDER_ID", subscription.merchant_subscription_id)
     response.set_cookie("ACQUIRER_ORDER_ID", subscription.paypal_subscription_id)
     response.set_cookie("PAYMENT_ID",  subscription.id)
