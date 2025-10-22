@@ -66,8 +66,8 @@ public class SecurityConfig {
         return  http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    //config.setAllowedOrigins(List.of(frontendBaseUrl, "https://localhost:8081", "https://localhost:3000", "https://localhost:8090"));
-                    config.setAllowedOrigins(List.of(frontendBaseUrl, "https://webshop-backend:8081", "https://webshop-frontend:3000", "https://bank:8090"));
+                    config.setAllowedOrigins(List.of(frontendBaseUrl, "https://localhost:8081", "https://localhost:3000", "https://localhost:8090", "https://localhost:3001"));
+                    //config.setAllowedOrigins(List.of(frontendBaseUrl, "https://webshop-backend:8081", "https://webshop-frontend:3000", "https://bank:8090"));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
                     config.setAllowCredentials(true);

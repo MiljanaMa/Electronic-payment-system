@@ -18,6 +18,8 @@ def get_paypal_access_token(merchant: Merchant) -> str:
     data = {"grant_type": "client_credentials"}
 
     r = requests.post(f"{PAYPAL_API_BASE}/v1/oauth2/token", headers=headers, data=data, auth=auth, verify=certifi.where())
+    print(merchant.paypal_client_id)
+    print(merchant.paypal_secret)
     if r.status_code != 200:
         raise HTTPException(status_code=500, detail=f"Failed to get PayPal access token: {r.text}")
 

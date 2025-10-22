@@ -18,6 +18,7 @@ def initiate_subscription_logic(req):
         paypal_subscription_id = '',
         plan_id= '',
         status="INITIATED",
+        merchant_subscription_id=req.merchant_subscription_id,
         success_url=req.success_url,
         error_url=req.error_url,
         failed_url=req.failed_url,
