@@ -1,0 +1,66 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "title": "Webshop: Log Stream",
+      "type": "logs",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{job=\"webshop\"}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 0, "w": 24, "h": 8},
+      "options": {
+        "showLabels": true,
+        "showTime": true
+      }
+    },
+    {
+      "title": "PSP: Log Stream",
+      "type": "logs",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{job=\"psp\"}",
+          "refId": "B"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 8, "w": 24, "h": 8},
+      "options": {
+        "showLabels": true,
+        "showTime": true
+      }
+    },
+    {
+      "title": "Webshop: Error Logs",
+      "type": "logs",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{job=\"webshop\"} |= \"ERROR\"",
+          "refId": "E"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 22, "w": 12, "h": 6}
+    },
+    {
+      "title": "PSP: Error Logs",
+      "type": "logs",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{job=\"psp\"} |= \"ERROR\"",
+          "refId": "F"
+        }
+      ],
+      "gridPos": {"x": 12, "y": 22, "w": 12, "h": 6}
+    }
+  ],
+  "schemaVersion": 37,
+  "title": "Webshop & PSP Logs",
+  "version": 1
+}
