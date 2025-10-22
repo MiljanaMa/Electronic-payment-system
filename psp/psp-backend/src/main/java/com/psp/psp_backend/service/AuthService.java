@@ -79,8 +79,10 @@ public class AuthService {
             String token = generateToken(authentication);
 
             AuthDto.Response response = new AuthDto.Response("User logged in successfully", token);
+            log.info("User logged successfully :{}", userLogin.username());
             return new ResponseEntity<AuthDto.Response>(response, HttpStatus.OK);
         }catch (Exception e){
+            log.error("User not logged successfully :{}", userLogin.username());
             AuthDto.Response response = new AuthDto.Response("Login error", null);
             return new ResponseEntity<AuthDto.Response>(response, HttpStatus.BAD_REQUEST);
         }

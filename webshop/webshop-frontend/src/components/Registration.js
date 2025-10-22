@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Typography, Button, Box, Container, Grid, TextField} from '@mui/material';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Typography, Button, Box, Container, Grid, TextField, IconButton, InputAdornment } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import axiosInstance from '../config/AxiosConfig';
 
 export default function Registration() {
@@ -11,10 +12,13 @@ export default function Registration() {
         username: '',
         password: '',
         confirmPassword: ''
-    })
+    });
 
-    const [error, setError] = useState('')
-    const navigate = useNavigate()
+    const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({
@@ -23,26 +27,36 @@ export default function Registration() {
         });
     };
 
+    const toggleShowPassword = () => setShowPassword(prev => !prev);
+    const toggleShowConfirmPassword = () => setShowConfirmPassword(prev => !prev);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if(formData.password !== formData.confirmPassword){
-            setError("Passwords do not match")
+            setError("Passwords do not match");
+            return;
         }
-        setError('')
+
+        const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+        if(!strongPasswordRegex.test(formData.password)){
+            setError("Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.");
+            return;
+        }
+
+        setError('');
 
         try{
-            const response = await await axiosInstance.post('auth/register', formData);
+            const response = await axiosInstance.post('auth/register', formData);
 
             if(response.status === 201) {
-                navigate('/registrationSuccessful')
+                navigate('/registrationSuccessful');
             } else {
                 const errorText = await response.text();
-                setError(errorText)
+                setError(errorText);
             }
         } catch(err){
-            setError('An error occured durin registration')
+            setError('An error occurred during registration');
         }
     }
 
@@ -58,7 +72,7 @@ export default function Registration() {
             <Grid item xs={12}>
               <TextField
                 label="First Name"
-                name="firstName"  // Match with formData's key
+                name="firstName"
                 fullWidth
                 value={formData.firstName}
                 onChange={handleChange}
@@ -68,14 +82,13 @@ export default function Registration() {
             <Grid item xs={12}>
               <TextField
                 label="Last Name"
-                name="lastName"  // Match with formData's key
+                name="lastName"
                 fullWidth
                 value={formData.lastName}
                 onChange={handleChange}
                 required
               />
             </Grid>
-
             <Grid item xs={12}>
               <TextField
                 label="Username"
@@ -90,22 +103,40 @@ export default function Registration() {
               <TextField
                 label="Password"
                 name="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 fullWidth
                 value={formData.password}
                 onChange={handleChange}
                 required
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={toggleShowPassword} edge="end">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 label="Confirm Password"
                 name="confirmPassword"
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 fullWidth
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={toggleShowConfirmPassword} edge="end">
+                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
               />
             </Grid>
             {error && (

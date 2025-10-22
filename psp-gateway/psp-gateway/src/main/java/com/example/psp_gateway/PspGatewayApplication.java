@@ -9,6 +9,10 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 public class PspGatewayApplication {
 
 	public static void main(String[] args) {
+
+		String trustStorePath = PspGatewayApplication.class.getClassLoader().getResource("truststore.jks").getPath();
+		System.setProperty("javax.net.ssl.trustStore", trustStorePath);
+		System.setProperty("javax.net.ssl.trustStorePassword", "truststorepassword");
 		SpringApplication.run(PspGatewayApplication.class, args);
 	}
 

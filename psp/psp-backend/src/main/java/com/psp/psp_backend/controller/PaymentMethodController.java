@@ -23,10 +23,11 @@ public class PaymentMethodController {
         Set<PaymentMethodInfoDto> paymentMethodsDto = paymentMethodService.getAll();
         return ResponseEntity.ok(paymentMethodsDto);
     }
-    @GetMapping("/transaction")
-    public ResponseEntity<Set<PaymentMethodInfoDto>> getClientPaymentMethods(@RequestParam String transactionId, @RequestParam String merchantId) {
+    @GetMapping("/methods")
+    public ResponseEntity<Set<PaymentMethodInfoDto>> getClientPaymentMethods(@RequestParam String id, @RequestParam String merchantId,
+                                                                             @RequestParam String paymentType) {
         try{
-            Set<PaymentMethodInfoDto> paymentMethodsDto = paymentMethodService.getByTransactionId(transactionId, merchantId);
+            Set<PaymentMethodInfoDto> paymentMethodsDto = paymentMethodService.getById(id, merchantId, paymentType);
             return ResponseEntity.ok(paymentMethodsDto);
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);

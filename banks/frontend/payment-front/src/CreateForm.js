@@ -53,7 +53,7 @@ const PaymentForm = () => {
         }
 
         try {
-            const response = await axios.post(`http://localhost:5000/process_payment/${paymentData.payment_id}`, paymentData);
+            const response = await axios.post(`https://localhost:5000/process_payment/${paymentData.payment_id}`, paymentData);
 
             if (response.data.ACQUIRER_ORDER_ID) {
                 Cookies.set('ACQUIRER_ORDER_ID', response.data.ACQUIRER_ORDER_ID);
