@@ -152,7 +152,7 @@ def process_payment(payment_id):
         "PAYMENT_ID": payment_id,
         "STATUS_URL": "http://localhost:3031/error"
     }), 200
-    
+
     payment = PaymentTransaction.query.filter_by(payment_id=payment_id).first()
     if not payment:
         return jsonify({
@@ -414,4 +414,4 @@ def add_sample_data():
 
 
 if __name__ == '__main__':
-    app.run(port=5000)
+    app.run(port=5000, debug=True)

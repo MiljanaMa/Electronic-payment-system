@@ -73,6 +73,7 @@ public class SecurityConfig {
                     csrf.disable();
                 })
                 .authorizeHttpRequests(auth -> {auth
+                            .requestMatchers("/register").permitAll()
                             .requestMatchers("/api/auth/**").permitAll()
                             .requestMatchers("/api/transaction/**").permitAll()
                             .requestMatchers("/api/paymentMethod/transaction").permitAll()  // Permit specific path
