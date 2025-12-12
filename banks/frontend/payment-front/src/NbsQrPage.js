@@ -30,6 +30,33 @@ const NbsQrPage = () => {
         }
     }, [paymentId]);
 
+    const scanQr = async () => {
+    try {
+        const blob = await fetch(qrImageUrl).then(res => res.blob());
+
+        const formData = new FormData();
+        formData.append("file", blob, "qr.png");
+
+        const response = await fetch("http://localhost:5000/scan_qr", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.qrText) {
+            console.log("Skenirano:", data.qrText);
+            alert("Skenirano:\n" + data.qrText);
+        } else {
+            alert("QR nije pročitan");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Greška pri slanju QR koda backendu");
+    }
+    };
+
+
     if (loading) return <p>Loading QR code...</p>;
     if (error) return <p>{error}</p>;
 
@@ -39,6 +66,7 @@ const NbsQrPage = () => {
             {qrImageUrl && (
                 <div className="qr-container">
                     <img src={qrImageUrl} alt="NBS QR Code" />
+                    <button onClick={scanQr}>Skeniraj QR</button>
                 </div>
             )}
         </div>

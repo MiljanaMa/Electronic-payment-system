@@ -1,4 +1,5 @@
 from io import BytesIO
+import io
 import uuid
 from flask import Flask, request, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
@@ -6,6 +7,8 @@ from flask_cors import CORS
 import qrcode
 import requests
 from datetime import datetime, timezone
+from pyzbar.pyzbar import decode
+from PIL import Image
 
 
 # Inicijalizacija aplikacije i baze podataka
@@ -183,6 +186,22 @@ def get_qr(payment_id):
     buffer.seek(0)
 
     return send_file(buffer, mimetype="image/png")
+
+@app.route('/scan_qr', methods=['POST'])
+def scan_qr():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    file = request.files['file']
+    img = Image.open(io.BytesIO(file.read()))
+
+    result = decode(img)
+    if not result:
+        return jsonify({"error": "QR not readable"}), 400
+
+    qr_text = result[0].data.decode("utf-8")
+
+    return jsonify({"qrText": qr_text})
 
 # Obrada plaćanja
 @app.route('/process_payment/<payment_id>', methods=['POST'])
