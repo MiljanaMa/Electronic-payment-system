@@ -70,8 +70,9 @@ export default function PaymentCheckout() {
     const transactionData = {
       merchantId,
       transactionId,
-      selectedPaymentMethod
+      paymentMethodId: selectedPaymentMethod
   };
+    console.log("selected payment method id", selectedPaymentMethod);
 
     try {
       const response = await axiosInstance.post('/transaction/checkout', transactionData)
