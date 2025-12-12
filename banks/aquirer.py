@@ -162,9 +162,22 @@ def get_qr(payment_id):
         "FAILED_URL": payment.failed_url,
         "ERROR_URL": payment.error_url,
     }
+    merchant = Merchant.query.filter_by(merchant_id=payment.merchant_id).first()
+    merchant_account_number = merchant.bank_account_number
+    merchant_name = merchant.name
+    reference_number = payment_id
+    print(f"broj racuna: {payment.amount}")
+
+    amount_str = f"{payment.amount:.2f}".replace('.', ',')
+    ro_value = reference_number[-12:]
+
+
+    qr_code_data = (
+    f"K:PR|V:01|C:1|R:{merchant_account_number}|N:{merchant_name}|I:RSD{amount_str}|SF:189|S:Pretplata|RO:{ro_value}"
+    )
 
     # Generiši QR kod
-    qr_img = qrcode.make(qr_data)
+    qr_img = qrcode.make(qr_code_data)
     buffer = BytesIO()
     qr_img.save(buffer, format="PNG")
     buffer.seek(0)
