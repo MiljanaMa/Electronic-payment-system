@@ -107,7 +107,7 @@
 }
 
 .nbs-qr-page {
-    max-width: 800px;
+    max-width: 1000px; /* povećano zbog tri kolone */
     margin: 40px auto;
     padding: 20px;
     background: #ffffff;
@@ -150,7 +150,7 @@
 }
 
 .qr-form {
-    margin-top: 25px;
+    margin-top: 0;
     padding: 20px;
     background: #f7f8fa;
     border-radius: 12px;
@@ -165,7 +165,6 @@
     border-bottom: 2px solid #dcdcdc;
     padding-bottom: 4px;
 }
-
 
 .qr-form label {
     display: block;
@@ -188,21 +187,50 @@
     background: #e9ecef;
     cursor: not-allowed;
 }
-/* Layout: QR levo, forma desno */
+
+/* Layout za tri kolone */
 .qr-layout {
     display: flex;
     gap: 20px;
     align-items: flex-start;
 }
 
-/* Leva strana */
+/* Leva strana - QR */
 .qr-left {
-    flex: 0 0 280px; /* širina QR koda */
+    flex: 0 0 280px;
 }
 
-/* Desna strana */
+/* Srednja strana - QR podaci */
 .qr-right {
     flex: 1;
 }
 
+/* Desna strana - Kartični podaci */
+.qr-card-form {
+    flex: 1;
+}
+
+.pay-btn {
+    width: 100%;
+    margin-top: 20px;
+    background: #28a745; /* green for pay */
+    color: white;
+    padding: 12px 0;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.pay-btn:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
+
+.pay-btn:active {
+    background: #1e7e34;
+    transform: translateY(0);
+}
 

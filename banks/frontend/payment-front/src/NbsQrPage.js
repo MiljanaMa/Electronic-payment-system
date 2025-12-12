@@ -8,7 +8,7 @@ const NbsQrPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // NOVO — čuvamo rezultate parsiranja
+    // Čuvamo rezultate parsiranja QR
     const [qrData, setQrData] = useState(null);
 
     useEffect(() => {
@@ -31,27 +31,27 @@ const NbsQrPage = () => {
         if (paymentId) fetchQr();
     }, [paymentId]);
 
-    // FUNKCIJA ZA PARSIRANJE QR STRINGA
+    // Parsiranje QR stringa
     const parseQrText = (text) => {
-    const parts = text.split("|");
-    const data = {};
+        const parts = text.split("|");
+        const data = {};
 
-    parts.forEach(p => {
-        if (p.startsWith("N:")) data.nazivPrimaoca = p.substring(2);
-        if (p.startsWith("R:")) data.racunPrimaoca = p.substring(2);
-        if (p.startsWith("RO:")) data.pozivNaBroj = p.substring(3);
-        if (p.startsWith("I:RSD")) {
-            data.valuta = "RSD";
-            data.iznos = p.substring(5);
-        }
-        if (p.startsWith("SF:")) data.sifraPlacanja = p.substring(3);
-        if (p.startsWith("S:")) data.svrhaPlacanja = p.substring(2);
-    });
+        parts.forEach(p => {
+            if (p.startsWith("N:")) data.nazivPrimaoca = p.substring(2);
+            if (p.startsWith("R:")) data.racunPrimaoca = p.substring(2);
+            if (p.startsWith("RO:")) data.pozivNaBroj = p.substring(3);
+            if (p.startsWith("I:RSD")) {
+                data.valuta = "RSD";
+                data.iznos = p.substring(5);
+            }
+            if (p.startsWith("SF:")) data.sifraPlacanja = p.substring(3);
+            if (p.startsWith("S:")) data.svrhaPlacanja = p.substring(2);
+        });
 
-    return data;
-};
+        return data;
+    };
 
-
+    // Funkcija za slanje QR na backend
     const scanQr = async () => {
         try {
             const blob = await fetch(qrImageUrl).then(res => res.blob());
@@ -68,7 +68,7 @@ const NbsQrPage = () => {
 
             if (data.qrText) {
                 const parsed = parseQrText(data.qrText);
-                setQrData(parsed); // čuvamo u state
+                setQrData(parsed);
             } else {
                 alert("QR nije pročitan");
             }
@@ -82,55 +82,85 @@ const NbsQrPage = () => {
     if (error) return <p>{error}</p>;
 
     return (
-    <div className="nbs-qr-page">
-        <h2>NBS QR Payment</h2>
+        <div className="nbs-qr-page">
+            <h2>NBS QR Payment</h2>
 
-        <div className="qr-layout">
-            {/* LEVA STRANA – QR + dugme */}
-            <div className="qr-left">
-                {qrImageUrl && (
-                    <div className="qr-container">
-                        <img src={qrImageUrl} alt="NBS QR Code" />
-                        <button onClick={scanQr}>Skeniraj QR</button>
+            <div className="qr-layout">
+                {/* LEVA STRANA – QR + dugme */}
+                <div className="qr-left">
+                    {qrImageUrl && (
+                        <div className="qr-container">
+                            <img src={qrImageUrl} alt="NBS QR Code" />
+                            <button onClick={scanQr}>Skeniraj QR</button>
+                        </div>
+                    )}
+                </div>
+
+                {/* SREDNJA KOLONA — PRIMALAC + DETALJI PLAĆANJA */}
+                {qrData && (
+                    <div className="qr-right">
+                        <div className="qr-form">
+                            <h3>PRIMALAC</h3>
+
+                            <label>Naziv primaoca:</label>
+                            <input type="text" value={qrData.nazivPrimaoca || ""} readOnly />
+
+                            <label>Broj računa primaoca:</label>
+                            <input type="text" value={qrData.racunPrimaoca || ""} readOnly />
+
+                            <label>Poziv na broj:</label>
+                            <input type="text" value={qrData.pozivNaBroj || ""} readOnly />
+
+                            <h3 style={{ marginTop: "25px" }}>DETALJI PLAĆANJA</h3>
+
+                            <label>Iznos:</label>
+                            <input type="text" value={qrData.iznos || ""} readOnly />
+
+                            <label>Valuta:</label>
+                            <input type="text" value={qrData.valuta || ""} readOnly />
+
+                            <label>Šifra plaćanja:</label>
+                            <input type="text" value={qrData.sifraPlacanja || ""} readOnly />
+
+                            <label>Svrha plaćanja:</label>
+                            <input type="text" value={qrData.svrhaPlacanja || ""} readOnly />
+                        </div>
                     </div>
                 )}
-            </div>
 
-            {/* DESNA STRANA — FORMA */}
-            {qrData && (
-                <div className="qr-right">
+                {qrData && (
+                <div className="qr-card-form">
                     <div className="qr-form">
-                        <h3>PRIMALAC</h3>
+                        <h3>KARTIČNI PODACI</h3>
 
-                        <label>Naziv primaoca:</label>
-                        <input type="text" value={qrData.nazivPrimaoca || ""} readOnly />
+                        <label>Broj kartice:</label>
+                        <input
+                            type="text"
+                            maxLength="16"
+                            placeholder="XXXX XXXX XXXX XXXX"
+                        />
 
-                        <label>Broj računa primaoca:</label>
-                        <input type="text" value={qrData.racunPrimaoca || ""} readOnly />
+                        <label>Datum isteka:</label>
+                        <input
+                            type="text"
+                            placeholder="MM/YY"
+                            maxLength="5"
+                        />
 
-                        <label>Poziv na broj:</label>
-                        <input type="text" value={qrData.pozivNaBroj || ""} readOnly />
+                        <label>CVV:</label>
+                        <input
+                            type="text"
+                            maxLength="3"
+                            placeholder="XXX"
+                        />
 
-                        <h3 style={{ marginTop: "25px" }}>DETALJI PLAĆANJA</h3>
-
-                        <label>Iznos:</label>
-                        <input type="text" value={qrData.iznos || ""} readOnly />
-
-                        <label>Valuta:</label>
-                        <input type="text" value={qrData.valuta || ""} readOnly />
-
-                        <label>Šifra plaćanja:</label>
-                        <input type="text" value={qrData.sifraPlacanja || ""} readOnly />
-
-                        <label>Svrha plaćanja:</label>
-                        <input type="text" value={qrData.svrhaPlacanja || ""} readOnly />
+                        <button className="pay-btn">Plati</button>
                     </div>
                 </div>
-            )}
+                )}
+            </div>
         </div>
-    </div>
-);
-
+    );
 };
 
 export default NbsQrPage;
