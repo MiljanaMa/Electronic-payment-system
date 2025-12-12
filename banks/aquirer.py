@@ -1,7 +1,9 @@
+from io import BytesIO
 import uuid
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+import qrcode
 import requests
 from datetime import datetime, timezone
 
@@ -111,15 +113,21 @@ with app.app_context():
 def generate_payment():
     data = request.json
     required_fields = ["MERCHANT_ID", "MERCHANT_PASSWORD", "AMOUNT", "MERCHANT_ORDER_ID", 
-                       "MERCHANT_TIMESTAMP", "SUCCESS_URL", "FAILED_URL", "ERROR_URL"]
+                       "MERCHANT_TIMESTAMP", "SUCCESS_URL", "FAILED_URL", "ERROR_URL", "PAYMENT_METHOD"]
     
     # Provera validnosti ulaznih podataka
     if not all(field in data for field in required_fields):
         return jsonify({"error": "Missing required fields"}), 400
 
+    payment_method = data['PAYMENT_METHOD']
+
+
     # Generisanje PAYMENT_ID i PAYMENT_URL
     payment_id = f"PAY-{data['MERCHANT_ORDER_ID']}"
-    payment_url = f"http://localhost:3002/{payment_id}"
+    if payment_method=="card":
+        payment_url = f"http://localhost:3002/{payment_id}"
+    else:
+        payment_url = f"http://localhost:3002/qr/{payment_id}"
 
     # Snimanje podataka u bazu
     payment = PaymentTransaction(
@@ -137,6 +145,31 @@ def generate_payment():
     db.session.commit()
 
     return jsonify({"PAYMENT_ID": payment_id, "PAYMENT_URL": payment_url}), 200
+
+@app.route('/get_qr/<payment_id>', methods=['GET'])
+def get_qr(payment_id):
+    # Pretpostavljamo da već imaš podatke u bazi
+    payment = PaymentTransaction.query.filter_by(payment_id=payment_id).first()
+    if not payment:
+        return {"error": "Payment not found"}, 404
+
+    qr_data = {
+        "MERCHANT_ID": payment.merchant_id,
+        "AMOUNT": payment.amount,
+        "MERCHANT_ORDER_ID": payment.merchant_order_id,
+        "MERCHANT_TIMESTAMP": payment.merchant_timestamp,
+        "SUCCESS_URL": payment.success_url,
+        "FAILED_URL": payment.failed_url,
+        "ERROR_URL": payment.error_url,
+    }
+
+    # Generiši QR kod
+    qr_img = qrcode.make(qr_data)
+    buffer = BytesIO()
+    qr_img.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    return send_file(buffer, mimetype="image/png")
 
 # Obrada plaćanja
 @app.route('/process_payment/<payment_id>', methods=['POST'])

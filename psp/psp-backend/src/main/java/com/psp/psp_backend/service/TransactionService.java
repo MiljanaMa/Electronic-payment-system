@@ -6,8 +6,10 @@ import com.psp.psp_backend.dto.BankResponseDto;
 import com.psp.psp_backend.dto.MerchantTransactionDto;
 import com.psp.psp_backend.dto.PaymentCheckoutDto;
 import com.psp.psp_backend.model.Client;
+import com.psp.psp_backend.model.PaymentMethod;
 import com.psp.psp_backend.model.Transaction;
 import com.psp.psp_backend.repository.ClientRepository;
+import com.psp.psp_backend.repository.PaymentMethodRepository;
 import com.psp.psp_backend.repository.TransactionRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class TransactionService {
@@ -26,6 +29,8 @@ public class TransactionService {
     TransactionRepository transactionRepository;
     @Autowired
     ClientRepository clientRepository;
+    @Autowired
+    PaymentMethodRepository paymentMethodRepository;
     @Value("${transaction.api.url}")
     private String transactionApiUrl;
     private WebClient webClient;
@@ -60,11 +65,13 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(paymentCheckoutDto.getTransactionId()).get();
         if(transaction == null)
             throw new Exception("Transaction is not found");
-        Map<String, Object> payload = makeBankRequest(transaction);
+        UUID paymentMethodUuid = UUID.fromString(paymentCheckoutDto.getPaymentMethodId());
+        PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentMethodUuid).orElseThrow(() -> new RuntimeException("Not found"));
+        Map<String, Object> payload = makeBankRequest(transaction, paymentMethod);
         Map<String, String> bankResponse = initiatePayment(payload);
         return bankResponse.get("PAYMENT_URL");
     }
-    private static Map<String, Object> makeBankRequest(Transaction transaction) {
+    private static Map<String, Object> makeBankRequest(Transaction transaction, PaymentMethod paymentMethod) {
         Map<String, Object> bankPayload = new HashMap<>();
         bankPayload.put("MERCHANT_ID", transaction.getClient().getMerchantId());
         bankPayload.put("MERCHANT_PASSWORD", transaction.getClient().getMerchantPassword());
@@ -74,6 +81,7 @@ public class TransactionService {
         bankPayload.put("SUCCESS_URL", "http://localhost:3001/success");
         bankPayload.put("FAILED_URL", "http://localhost:3001/failed");
         bankPayload.put("ERROR_URL", "http://localhost:3001/error");
+        bankPayload.put("PAYMENT_METHOD", paymentMethod.getName());
         return bankPayload;
     }
     private static Map<String, Object> makeClientRequest(Transaction transaction, String status) {

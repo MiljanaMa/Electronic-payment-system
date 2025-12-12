@@ -6,7 +6,6 @@ import java.util.UUID;
 @Entity
 public class PaymentMethod {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", unique = true, nullable = false)
     private UUID id;
     @Column(name = "name", unique = true, nullable = false)
