@@ -203,6 +203,180 @@ def scan_qr():
 
     return jsonify({"qrText": qr_text})
 
+@app.route('/process_payment/qr/<payment_id>', methods=['POST'])
+def process_qr_payment(payment_id):
+    data = request.json
+
+    required_fields = [
+        "PAN",
+        "SECURITY_CODE",
+        "CARD_HOLDER_NAME",
+        "CARD_EXPIRY_DATE",
+        "PAYMENT_ID"
+    ]
+
+    transaction = PaymentTransaction.query.filter_by(
+        payment_id=payment_id
+    ).first()
+
+    # 1. Provera obaveznih polja
+    if not data or not all(field in data for field in required_fields):
+        transaction.status = "Declined"
+        db.session.commit()
+        return jsonify({
+            "MERCHANT_ORDER_ID": payment_id,
+            "ACQUIRER_ORDER_ID": payment_id,
+            "ACQUIRER_TIMESTAMP": payment_id,
+            "PAYMENT_ID": payment_id,
+            "STATUS_URL": "http://localhost:3001/error"
+        }), 200
+    
+    print(f"proslo check za all fields")
+
+    # 2. Pronalazak payment-a
+    payment = PaymentTransaction.query.filter_by(payment_id=payment_id).first()
+    if not payment:
+        transaction.status = "Declined"
+        db.session.commit()
+        return jsonify({
+            "MERCHANT_ORDER_ID": payment_id,
+            "ACQUIRER_ORDER_ID": payment_id,
+            "ACQUIRER_TIMESTAMP": payment_id,
+            "PAYMENT_ID": payment_id,
+            "STATUS_URL": "http://localhost:3001/error"
+        }), 200
+    
+    print(f"proslo check za payment")
+
+
+    # 3. Pronalazak merchant-a
+    merchant = Merchant.query.filter_by(merchant_id=payment.merchant_id).first()
+    if not merchant:
+        transaction.status = "Declined"
+        db.session.commit()
+        return jsonify({
+            "MERCHANT_ORDER_ID": payment.merchant_order_id,
+            "ACQUIRER_ORDER_ID": payment_id,
+            "ACQUIRER_TIMESTAMP": payment_id,
+            "PAYMENT_ID": payment.payment_id,
+            "STATUS_URL": "http://localhost:3001/error"
+        }), 200
+    
+    print(f"proslo check za merchant")
+
+
+    # 4. Pronalazak kartice
+    card = Card.query.filter_by(card_number=data["PAN"]).first()
+    if not card:
+        transaction.status = "Declined"
+        db.session.commit()
+        return jsonify({
+            "MERCHANT_ORDER_ID": payment.merchant_order_id,
+            "ACQUIRER_ORDER_ID": payment_id,
+            "ACQUIRER_TIMESTAMP": payment_id,
+            "PAYMENT_ID": payment.payment_id,
+            "STATUS_URL": "http://localhost:3001/error"
+        }), 200
+    
+    print(f"proslo check za find card")
+
+
+    # 5. Provere kartičnih podataka
+    if (
+        card.cvv != data["SECURITY_CODE"] or
+        card.holder_name != data["CARD_HOLDER_NAME"] or
+        card.expiration_date != data["CARD_EXPIRY_DATE"]
+    ):
+        transaction.status = "Declined"
+        db.session.commit()
+        return jsonify({
+            "MERCHANT_ORDER_ID": payment.merchant_order_id,
+            "ACQUIRER_ORDER_ID": payment_id,
+            "ACQUIRER_TIMESTAMP": payment_id,
+            "PAYMENT_ID": payment.payment_id,
+            "STATUS_URL": "http://localhost:3001/error"
+        }), 200
+    
+    print(f"proslo check za karticne podatke")
+
+
+    # 6. Račun kupca
+    customer_account = BankAccount.query.filter_by(
+        account_number=card.account_number
+    ).first()
+
+    if not customer_account:
+        transaction.status = "Declined"
+        db.session.commit()
+        return jsonify({
+            "MERCHANT_ORDER_ID": payment.merchant_order_id,
+            "ACQUIRER_ORDER_ID": payment_id,
+            "ACQUIRER_TIMESTAMP": payment_id,
+            "PAYMENT_ID": payment.payment_id,
+            "STATUS_URL": "http://localhost:3001/error"
+        }), 200
+    print(f"proslo check za bank account")
+
+
+    # 7. Provera sredstava
+    if customer_account.balance < payment.amount:
+        transaction.status = "Declined"
+        db.session.commit()
+        return jsonify({
+            "MERCHANT_ORDER_ID": payment.merchant_order_id,
+            "ACQUIRER_ORDER_ID": payment_id,
+            "ACQUIRER_TIMESTAMP": payment_id,
+            "PAYMENT_ID": payment.payment_id,
+            "STATUS_URL": "http://localhost:3001/error"
+        }), 200
+    
+    print(f"proslo check za bank balance")
+
+
+    # 8. Račun merchant-a
+    merchant_account = BankAccount.query.filter_by(
+        account_number=merchant.bank_account_number
+    ).first()
+
+    if not merchant_account:
+        transaction.status = "Declined"
+        db.session.commit()
+        return jsonify({
+            "MERCHANT_ORDER_ID": payment.merchant_order_id,
+            "ACQUIRER_ORDER_ID": payment_id,
+            "ACQUIRER_TIMESTAMP": payment_id,
+            "PAYMENT_ID": payment.payment_id,
+            "STATUS_URL": "http://localhost:3001/error"
+        }), 200
+    
+    print(f"proslo check za merchant account")
+
+
+    # 9. Transakcija
+    customer_account.balance -= payment.amount
+    merchant_account.balance += payment.amount
+    db.session.commit()
+
+    # 10. Uspešan odgovor
+    acquirer_order_id = str(uuid.uuid4())
+    acquirer_timestamp = datetime.now(timezone.utc).isoformat()
+
+    print(f"zadnji ispis")
+
+    
+
+    transaction.status = "Approved"
+    db.session.commit()
+
+    return jsonify({
+        "MERCHANT_ORDER_ID": payment.merchant_order_id,
+        "ACQUIRER_ORDER_ID": acquirer_order_id,
+        "ACQUIRER_TIMESTAMP": acquirer_timestamp,
+        "PAYMENT_ID": payment.payment_id,
+        "STATUS_URL": "http://localhost:3001/success"
+    }), 200
+
+
 # Obrada plaćanja
 @app.route('/process_payment/<payment_id>', methods=['POST'])
 def process_payment(payment_id):
