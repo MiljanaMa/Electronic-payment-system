@@ -43,6 +43,8 @@ public class SubscriptionService {
     private String transactionApiUrl;
     @Value("${frontend.base.url}")
     private String frontendBaseUrl;
+    @Value("${paypal.api.url}")
+    private String paypalApiUrl;
     @PostConstruct
     public void init() {
         if (transactionApiUrl != null && !transactionApiUrl.isEmpty()) {
@@ -108,7 +110,7 @@ public class SubscriptionService {
     }
     private String initiatePayPalPayment(Map<String, Object> payPalPayload) {
         try {
-            WebClient webClient = createSecureWebClient("https://localhost:8087");
+            WebClient webClient = createSecureWebClient(paypalApiUrl);
             String response =  webClient.post()
                     .uri("subscriptions/initiate")
                     .contentType(MediaType.APPLICATION_JSON)

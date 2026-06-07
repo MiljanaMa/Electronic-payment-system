@@ -52,6 +52,8 @@ public class TransactionService {
     @Value("${crypto.api.url}")
     private String cryptoApiUrl;
     private WebClient webClientCrypto;
+    @Value("${paypal.api.url}")
+    private String paypalApiUrl;
     @PostConstruct
     public void init() {
         if (transactionApiUrl != null && !transactionApiUrl.isEmpty()) {
@@ -140,7 +142,7 @@ public class TransactionService {
 
     private String initiatePayPalPayment(Map<String, Object> payPalPayload) {
         try {
-            WebClient webClient = createSecureWebClient("https://localhost:8087");
+            WebClient webClient = createSecureWebClient(paypalApiUrl);
             String response = webClient.post()
                     .uri("/payments/initiate")
                     .contentType(MediaType.APPLICATION_JSON)
